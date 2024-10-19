@@ -7,11 +7,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace HospitalManagement
+namespace HospitalManagement.View.Login
 {
 
 
-    public partial class MfaVerification
+    public partial class mfaVerification
     {
 
         /// <summary>

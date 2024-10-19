@@ -6,7 +6,7 @@ namespace HospitalManagement.DataAccess
     public class database
     {
         private string connectionString = "Server=LAPTOP-ETH969NJ;Database=Healthcare;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
-
+/*
         public bool ValidateUser(string username, string password)
         {
             using (SqlConnection con = new SqlConnection(connectionString))
@@ -22,5 +22,6 @@ namespace HospitalManagement.DataAccess
                 }
             }
         }
+*/
     }
 }
