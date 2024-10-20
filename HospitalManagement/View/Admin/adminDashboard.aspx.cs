@@ -15,8 +15,7 @@ namespace HospitalManagement.View
             if (!User.Identity.IsAuthenticated)
             {
                 Response.Write("<script>alert('User is not authenticated. Redirecting to login.');</script>");
-                // Uncomment for actual redirection after debugging
-                // Response.Redirect("~/View/Login.aspx");
+                Response.Redirect("~/View/Login.aspx");
             }
             else
             {
@@ -25,18 +24,13 @@ namespace HospitalManagement.View
             }
         }
 
-
-        protected void btnLogout_Click(object sender, EventArgs e)
-        {
-            LogoutUser();
-        }
-
-        private void LogoutUser()
+        protected void LogoutButton_Click(object sender, EventArgs e)
         {
             Session.Clear();
             Session.Abandon();
             FormsAuthentication.SignOut();
             Response.Redirect("~/View/Login.aspx");
         }
+
     }
 }

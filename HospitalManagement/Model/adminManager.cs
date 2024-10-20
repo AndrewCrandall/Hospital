@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -14,7 +15,7 @@ public class AdminManager : SqlConnectionManager
         try
         {
             OpenConnection();
-            string query = "SELECT u.firstName, u.lastName, u.userID, u.address, u.phone, ul.userName, ul.userType FROM Users u INNER JOIN UserLogin ul ON u.userID = ul.userID";
+            string query = "SELECT firstName, lastName, userID, username, userType FROM Users";
 
             using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {
@@ -35,17 +36,14 @@ public class AdminManager : SqlConnectionManager
 
         return userTable; // Return the DataTable containing user data
     }
+
     public DataTable GetUsersByType(string userType)
     {
         DataTable userTable = new DataTable();
         try
         {
             OpenConnection();
-            string query = @"
-            SELECT u.firstName, u.lastName, u.userID, u.address, u.phone, ul.userName, ul.userType 
-            FROM Users u 
-            INNER JOIN UserLogin ul ON u.userID = ul.userID 
-            WHERE ul.userType = @userType";
+            string query = "SELECT firstName, lastName, userID, username, userType FROM Users WHERE userType = @userType";
 
             using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {
@@ -68,21 +66,26 @@ public class AdminManager : SqlConnectionManager
         return userTable; // Return the DataTable containing filtered user data
     }
 
-
     public User SearchUser(string firstName, string lastName, string userId)
     {
         User user = null; // Initialize user object
         try
         {
-            OpenConnection();
 
-            // First query to get basic user details
+            // Convert userId to int if possible
+            int? userIdInt = null;
+            if (int.TryParse(userId, out int parsedId))
+            {
+                userIdInt = parsedId;
+            }
+
+            OpenConnection();
             string query = @"
-                SELECT u.firstName, u.lastName, u.userID, u.address, u.phone 
-                FROM Users u
-                WHERE (@firstName IS NULL OR u.firstName = @firstName)
-                  AND (@lastName IS NULL OR u.lastName = @lastName)
-                  AND (@userId IS NULL OR u.userID = @userId);";
+            SELECT firstName, lastName, userID, email, userType, username
+            FROM Users 
+            WHERE (@firstName IS NULL OR firstName = @firstName)
+              AND (@lastName IS NULL OR lastName = @lastName)
+              AND (@userID IS NULL OR userID = @userID);";
 
             using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {
@@ -99,32 +102,10 @@ public class AdminManager : SqlConnectionManager
                             FirstName = reader["firstName"].ToString(),
                             LastName = reader["lastName"].ToString(),
                             UserId = reader["userID"].ToString(),
-                            Address = reader["address"].ToString(),
-                            PhoneNumber = reader["phone"].ToString()
+                            Username = reader["username"].ToString(), // If userName is still in UserLogin, adjust as needed
+                            UserType = reader["userType"].ToString(),
+                            Email = reader["email"].ToString() // Include email from Users table
                         };
-                    }
-                }
-            }
-
-            // If user is found, retrieve username and user type
-            if (user != null)
-            {
-                string secondQuery = @"
-                    SELECT ul.userName, ul.userType 
-                    FROM UserLogin ul 
-                    WHERE ul.userID = @userID;";
-
-                using (SqlCommand command = new SqlCommand(secondQuery, GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@userID", user.UserId);
-
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            user.Username = reader["userName"].ToString();
-                            user.UserType = reader["userType"].ToString();
-                        }
                     }
                 }
             }
@@ -141,98 +122,145 @@ public class AdminManager : SqlConnectionManager
         return user; // Return the populated user object
     }
 
-    public UserData SearchData(string firstName, string lastName, string userId)
+
+    public List<UserData> SearchAppointments(int userId)
     {
-            UserData userData = null; // Initialize userData object
-            try
+        List<UserData> appointments = new List<UserData>(); // Initialize the list
+        try
+        {
+            OpenConnection();
+            string query = @"
+                        SELECT 
+                            u.firstName AS FirstName,  -- Change to match UserData
+                            u.lastName AS LastName,     -- Change to match UserData
+                            d.doctorID,
+                            du.firstName AS DoctorFirstName,
+                            du.lastName AS DoctorLastName,
+                            a.appointmentDate,
+                            a.notes
+                        FROM 
+                            HealthManagement.dbo.Users AS u
+                        JOIN 
+                            HealthManagement.dbo.Patients AS p ON u.userID = p.userID
+                        JOIN 
+                            HealthManagement.dbo.Appointments AS a ON p.patientID = a.patientID
+                        JOIN 
+                            HealthManagement.dbo.Doctors AS d ON a.doctorID = d.doctorID
+                        JOIN 
+                            HealthManagement.dbo.Users AS du ON d.userID = du.userID  
+                        WHERE 
+                            u.userID = @userId;";
+
+
+
+            using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {
-                OpenConnection();
+                command.Parameters.AddWithValue("@userId", userId);
 
-                // SQL query to get user data details
-                string query = @"
-            SELECT u.firstName, u.lastName, u.visitDate, u.notes
-            FROM UserData u
-            WHERE (@firstName IS NULL OR u.firstName = @firstName)
-              AND (@lastName IS NULL OR u.lastName = @lastName)
-              AND (@userId IS NULL OR u.userID = @userId);";
-
-                using (SqlCommand command = new SqlCommand(query, GetConnection()))
+                using (SqlDataReader reader = command.ExecuteReader())
                 {
-                    command.Parameters.AddWithValue("@firstName",firstName);
-                    command.Parameters.AddWithValue("@lastName",lastName);
-                    command.Parameters.AddWithValue("@userId", userId);
-
-                    using (SqlDataReader reader = command.ExecuteReader())
+                    while (reader.Read())
                     {
-                        if (reader.Read())
+                        var userData = new UserData
                         {
-                            userData = new UserData
-                            {
-                                FirstName = reader["firstName"].ToString(),
-                                LastName = reader["lastName"].ToString(),
-                                VisitDate = reader["visitDate"].ToString(), // Keep as string
-                                Notes = reader["notes"].ToString()
-                            };
-                        }
+                            FirstName = reader["FirstName"].ToString(),
+                            LastName = reader["LastName"].ToString(),
+                            DoctorID = reader["doctorID"].ToString(),
+                            DoctorFirstName = reader["DoctorFirstName"].ToString(),
+                            DoctorLastName = reader["DoctorLastName"].ToString(),
+                            VisitDate = Convert.ToDateTime(reader["appointmentDate"]).ToString("MM/dd/yyyy"),
+                            Notes = reader["notes"].ToString()
+                        };
+
+                        appointments.Add(userData);
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error searching for user data: {ex.Message}");
-            }
-            finally
-            {
-                CloseConnection();
-            }
-
-            return userData; // Return the populated UserData object
         }
-    internal bool UpdateUser(string userId, string firstName, string lastName, string address, string phoneNumber, string username, string userType)
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching for appointments: {ex.Message}");
+        }
+        finally
+        {
+            CloseConnection();
+        }
+
+        return appointments; // Return the list of UserData
+    }
+
+
+
+
+
+    internal bool UpdateUser(string userID, string firstName, string lastName, string username, string userType)
     {
-            try
+        try
+        {
+            int userIdInt;
+            if (!int.TryParse(userID, out userIdInt))
             {
-
-                // Convert the userId to an integer
-                int userIdInt;
-                if (!int.TryParse(userId, out userIdInt))
-                {
-                    // Handle invalid userId if necessary
-                    return false;
-                }
+                return false; // Handle invalid userId if necessary
+            }
             OpenConnection();
-                string query = @"
+            string query = @"
                 UPDATE Users
-                SET firstName = @firstName, lastName = @lastName, address = @address, phone = @phone
-                WHERE userID = (SELECT userID FROM UserLogin WHERE userName = @userName);
+                SET firstName = @firstName, lastName = @lastName, username = @username, userType = @userType
+                WHERE userID = @userId;";
 
-                UPDATE UserLogin
-                SET userName = @userName, userType = @userType
-                WHERE userName = @userName;";
-
-                using (SqlCommand command = new SqlCommand(query, GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@firstName", firstName);
-                    command.Parameters.AddWithValue("@lastName", lastName);
-                    command.Parameters.AddWithValue("@address", address);
-                    command.Parameters.AddWithValue("@phone", phoneNumber);
-                    command.Parameters.AddWithValue("@userName", username);
-                    command.Parameters.AddWithValue("@userType", userType);
-
-                    int rowsAffected = command.ExecuteNonQuery();
-                    return rowsAffected > 0; // Return true if at least one row was updated
-                }
-            }
-            catch (Exception ex)
+            using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {
-                Console.WriteLine($"Error updating user: {ex.Message}");
-                return false;
+                command.Parameters.AddWithValue("@firstName", firstName);
+                command.Parameters.AddWithValue("@lastName", lastName);
+                command.Parameters.AddWithValue("@username", username);
+                command.Parameters.AddWithValue("@userType", userType);
+                command.Parameters.AddWithValue("@userId", userIdInt);
+
+                int rowsAffected = command.ExecuteNonQuery();
+                return rowsAffected > 0; // Return true if at least one row was updated
             }
-            finally
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating user: {ex.Message}");
+            return false;
+        }
+        finally
+        {
+            CloseConnection();
+        }
+    }
+
+    public bool UpdateAppointment(int appointmentId, string visitDate, string notes)
+    {
+        try
+        {
+            OpenConnection();
+            string query = @"
+                UPDATE Appointments
+                SET appointmentDate = @visitDate,
+                    notes = @notes
+                WHERE appointmentID = @appointmentId;";
+
+            using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {
-                CloseConnection();
+                command.Parameters.AddWithValue("@appointmentId", appointmentId);
+                command.Parameters.AddWithValue("@visitDate", visitDate);
+                command.Parameters.AddWithValue("@notes", notes);
+
+                int rowsAffected = command.ExecuteNonQuery();
+                return rowsAffected > 0; // Return true if at least one row was updated
             }
-        
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating appointment: {ex.Message}");
+            return false;
+        }
+        finally
+        {
+            CloseConnection();
+        }
     }
 }
 
@@ -243,8 +271,7 @@ public class User
     public string LastName { get; set; }
     public string UserId { get; set; }
     public string Username { get; set; }
-    public string Address { get; set; }
-    public string PhoneNumber { get; set; }
+    public string Email { get; set; }
     public string UserType { get; set; } // Include UserType
 }
 
@@ -252,7 +279,9 @@ public class UserData
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }
+    public string DoctorID { get; set; }
+    public string DoctorFirstName { get; set; }
+    public string DoctorLastName { get; set; }
     public string VisitDate { get; set; }
     public string Notes { get; set; }
-
 }

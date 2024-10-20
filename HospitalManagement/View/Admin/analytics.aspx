@@ -23,8 +23,6 @@
                 <asp:BoundField DataField="firstName" HeaderText="First Name" />
                 <asp:BoundField DataField="lastName" HeaderText="Last Name" />
                 <asp:BoundField DataField="userID" HeaderText="User ID" />
-                <asp:BoundField DataField="address" HeaderText="Address" />
-                <asp:BoundField DataField="phone" HeaderText="Phone" />
                 <asp:BoundField DataField="userName" HeaderText="Username" />
                 <asp:BoundField DataField="userType" HeaderText="User Type" />
             </Columns>

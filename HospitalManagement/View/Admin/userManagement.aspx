@@ -41,11 +41,8 @@
                     <label>Username:</label>
                     <asp:TextBox ID="displayUsername" runat="server" ReadOnly="true"/>
 
-                    <label>Address:</label>
+                    <label>Email Address:</label>
                     <asp:TextBox ID="displayAddress" runat="server" />
-
-                    <label>Phone Number:</label>
-                    <asp:TextBox ID="displayPhoneNumber" runat="server" />
 
                     <label>User Type:</label>
                     <asp:DropDownList ID="displayUserType" runat="server" CssClass="text-box">

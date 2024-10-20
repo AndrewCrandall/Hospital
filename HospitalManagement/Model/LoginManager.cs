@@ -20,11 +20,11 @@ public class LoginManager : SqlConnectionManager
         try
         {
             OpenConnection();
-            string query = "SELECT userType FROM UserLogin WHERE userName=@username AND password=@password;";
+            string query = "SELECT userType FROM Users WHERE username=@username AND password=@password;";
 
             using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {
-                command.Parameters.AddWithValue("@userName", username);
+                command.Parameters.AddWithValue("@username", username);
                 command.Parameters.AddWithValue("@password", password);
 
                 var result = command.ExecuteScalar();
@@ -110,7 +110,7 @@ public class LoginManager : SqlConnectionManager
         try
         {
             OpenConnection();
-            string query = "SELECT email FROM Users WHERE userID = (SELECT userID FROM UserLogin WHERE userName=@username);";
+            string query = "SELECT email FROM Users WHERE userID = (SELECT userID FROM Users WHERE username=@username);";
 
             using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {

@@ -24,24 +24,6 @@ namespace HospitalManagement.View.Admin
         protected global::System.Web.UI.HtmlControls.HtmlForm form1;
 
         /// <summary>
-        /// firstNameInput control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox firstNameInput;
-
-        /// <summary>
-        /// lastNameInput control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox lastNameInput;
-
-        /// <summary>
         /// userIdInput control.
         /// </summary>
         /// <remarks>
@@ -60,40 +42,13 @@ namespace HospitalManagement.View.Admin
         protected global::System.Web.UI.WebControls.Button searchBtn;
 
         /// <summary>
-        /// displayFirstName control.
+        /// AppointmentGridView control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox displayFirstName;
-
-        /// <summary>
-        /// displayLastName control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox displayLastName;
-
-        /// <summary>
-        /// displayDate control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox displayDate;
-
-        /// <summary>
-        /// displayNotes control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox displayNotes;
+        protected global::System.Web.UI.WebControls.GridView AppointmentGridView;
 
         /// <summary>
         /// btnBack control.

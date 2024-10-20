@@ -24,7 +24,6 @@ namespace HospitalManagement.View.Admin
             displayLastName.Text = string.Empty;
             displayUsername.Text = string.Empty;
             displayAddress.Text = string.Empty;
-            displayPhoneNumber.Text = string.Empty;
             displayUserType.SelectedIndex = -1; // Reset the dropdown to no selection
         }
 
@@ -33,8 +32,6 @@ namespace HospitalManagement.View.Admin
             // Get the updated values from the input fields
             string firstName = displayFirstName.Text;
             string lastName = displayLastName.Text;
-            string address = displayAddress.Text;
-            string phoneNumber = displayPhoneNumber.Text;
             string username = displayUsername.Text;
             string userType = displayUserType.SelectedValue; // Get selected value from dropdown
             string userID = userIdInput.Text;
@@ -43,7 +40,7 @@ namespace HospitalManagement.View.Admin
             AdminManager adminManager = new AdminManager();
 
             // Call the UpdateUser method
-            bool updateSuccess = adminManager.UpdateUser(userID, firstName, lastName, address, phoneNumber, username, userType);
+            bool updateSuccess = adminManager.UpdateUser(userID, firstName, lastName, username, userType);
 
             // Check if the update was successful
             if (updateSuccess)
@@ -80,9 +77,8 @@ namespace HospitalManagement.View.Admin
                 // Populate the readonly fields with the found user's details
                 displayFirstName.Text = foundUser.FirstName;
                 displayLastName.Text = foundUser.LastName;
-                displayUsername.Text = foundUser.Username; // Set the label's text
-                displayAddress.Text = foundUser.Address;
-                displayPhoneNumber.Text = foundUser.PhoneNumber;
+                displayUsername.Text = foundUser.Username; // Set the label'
+                displayAddress.Text = foundUser.Email;
                 displayUserType.SelectedValue = foundUser.UserType; // Set the selected value based on found user
             }
             else

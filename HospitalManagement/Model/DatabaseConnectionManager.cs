@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 public class SqlConnectionManager
 {
     // Store the connection string as a constant
-    private const string ConnectionString = "Server=LAPTOP-ETH969NJ;Database=Healthcare;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+    private const string ConnectionString = "Server=LAPTOP-ETH969NJ;Database=HealthManagement;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
     private SqlConnection _sqlConnection;
 
     // Constructor

@@ -12,8 +12,12 @@ namespace HospitalManagement.View.Admin
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-
+            if (!IsPostBack)
+            {
+                BindGrid();
+            }
         }
+
 
         protected void Back_Click(object sender, EventArgs e)
         {
@@ -22,54 +26,121 @@ namespace HospitalManagement.View.Admin
 
         protected void Cancel_Click(object sender, EventArgs e)
         {
-            // Clear input fields
-            firstNameInput.Text = string.Empty;
-            lastNameInput.Text = string.Empty;
-            userIdInput.Text = string.Empty;
-            displayFirstName.Text = string.Empty;
-            displayLastName.Text = string.Empty;
-            displayDate.Text = string.Empty;
-            displayNotes.Text = string.Empty;
+            // Clear the grid by setting the DataSource to null and re-binding
+            AppointmentGridView.DataSource = null;
+            AppointmentGridView.DataBind();
 
+            // Optionally, clear the user ID input
+            userIdInput.Text = string.Empty;
         }
+
         protected void Search_Click(object sender, EventArgs e)
         {
-            // Get input values
-            string firstName = firstNameInput.Text;
-            string lastName = lastNameInput.Text;
-            string userId = userIdInput.Text;
+            string userID = userIdInput.Text;
 
-            // Create an instance of AdminManager
-            AdminManager adminManager = new AdminManager();
-
-            // Call the SearchData method
-            UserData foundUser = adminManager.SearchData(firstName, lastName, userId);
-
-            // Clear input fields
-            firstNameInput.Text = string.Empty;
-            lastNameInput.Text = string.Empty;
-            userIdInput.Text = string.Empty;
-
-            // Check if a user was found
-            if (foundUser != null)
+            int userId;
+            if (int.TryParse(userID, out userId))
             {
-                // Populate display fields with found user data
-                displayFirstName.Text = foundUser.FirstName;
-                displayLastName.Text = foundUser.LastName;
-                displayDate.Text = foundUser.VisitDate; // Assuming this is the right field
-                displayNotes.Text = foundUser.Notes;
+                AdminManager adminManager = new AdminManager();
+                List<UserData> appointments = adminManager.SearchAppointments(userId);
+
+                // Bind the appointments to a control, e.g., GridView or Repeater
+                AppointmentGridView.DataSource = appointments;
+                AppointmentGridView.DataBind();
             }
             else
             {
-                // Optionally, handle the case where no user was found
-                string script = "alert('No user found.');";
-                ClientScript.RegisterStartupScript(this.GetType(), "UserNotFound", script, true);
+                // Handle invalid userId
+                ClientScript.RegisterStartupScript(this.GetType(), "InvalidUserId", "alert('Invalid User ID.');", true);
             }
         }
 
+
+
+
         protected void Save_Click(object sender, EventArgs e)
         {
-            return;
+            AdminManager adminManager = new AdminManager();
+            bool anyUpdateFailed = false; // Flag to track if any updates fail
+            List<string> failedUpdates = new List<string>(); // List to store failure messages
+
+            foreach (GridViewRow row in AppointmentGridView.Rows)
+            {
+                if (row.RowType == DataControlRowType.DataRow)
+                {
+                    // Retrieve the IDs or keys you need for the update
+                    int appointmentId = Convert.ToInt32(AppointmentGridView.DataKeys[row.RowIndex].Value);
+                    string visitDate = ((TextBox)row.Cells[4].Controls[0]).Text;
+                    string notes = ((TextBox)row.Cells[5].Controls[0]).Text;
+
+                    // Call the update function to update the database
+                    bool success = adminManager.UpdateAppointment(appointmentId, visitDate, notes);
+                    if (!success)
+                    {
+                        anyUpdateFailed = true; // Mark that an update failed
+                        failedUpdates.Add($"Appointment ID {appointmentId} could not be updated.");
+                    }
+                }
+            }
+
+            // Check if any updates failed and handle accordingly
+            if (anyUpdateFailed)
+            {
+                string errorMessage = "Some appointments could not be updated:\n" + string.Join("\n", failedUpdates);
+                ClientScript.RegisterStartupScript(this.GetType(), "UpdateFailed", $"alert('{errorMessage}');", true);
+            }
+            else
+            {
+                // Optionally, show a success message
+                ClientScript.RegisterStartupScript(this.GetType(), "UpdateSuccess", "alert('All appointments updated successfully.');", true);
+            }
+
+            // Optionally, rebind the grid to refresh data
+            BindGrid();
         }
+
+
+        protected void AppointmentGridView_RowEditing(object sender, GridViewEditEventArgs e)
+        {
+            // Set the row to edit
+            AppointmentGridView.EditIndex = e.NewEditIndex;
+            BindGrid(); // Rebind data to the grid
+        }
+
+        protected void AppointmentGridView_RowUpdating(object sender, GridViewUpdateEventArgs e)
+        {
+            // Get the row being edited
+            GridViewRow row = AppointmentGridView.Rows[e.RowIndex];
+
+            // Get values from the edited row
+            string patientFirstName = ((TextBox)row.Cells[0].Controls[0]).Text;
+            string patientLastName = ((TextBox)row.Cells[1].Controls[0]).Text;
+            string doctorFirstName = ((TextBox)row.Cells[2].Controls[0]).Text;
+            string doctorLastName = ((TextBox)row.Cells[3].Controls[0]).Text;
+            string visitDate = ((TextBox)row.Cells[4].Controls[0]).Text;
+            string notes = ((TextBox)row.Cells[5].Controls[0]).Text;
+
+            // Here you would typically update the database with the new values
+            // UpdateDatabase(patientFirstName, patientLastName, doctorFirstName, doctorLastName, visitDate, notes);
+
+            // Reset the edit index and rebind the data
+            AppointmentGridView.EditIndex = -1;
+            BindGrid();
+        }
+
+        protected void AppointmentGridView_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
+        {
+            // Cancel the edit operation
+            AppointmentGridView.EditIndex = -1;
+            BindGrid(); // Rebind data to the grid
+        }
+
+        private void BindGrid()
+        {
+            // This method should bind the data to the GridView
+            // Example: AppointmentGridView.DataSource = GetData();
+            AppointmentGridView.DataBind();
+        }
+
     }
 }
