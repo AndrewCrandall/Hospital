@@ -21,10 +21,6 @@ namespace HospitalManagement.View.Login
 
             if (mfaCodeTxt.Text == storedMfaCode)
             {
-                // Clear the session
-                Session.Remove("MfaCode");
-                Session.Remove("Username");
-                Session.Remove("UserType");
 
                 // Create an instance of LoginManager
                 LoginManager userDataAccess = new LoginManager();
@@ -34,6 +30,11 @@ namespace HospitalManagement.View.Login
 
                 // Redirect to the appropriate dashboard
                 userDataAccess.RedirectUser(userType, HttpContext.Current);
+
+                // Clear the session
+                 Session.Remove("MfaCode");
+                 Session.Remove("Username");
+                 Session.Remove("UserType");
             }
             else
             {
