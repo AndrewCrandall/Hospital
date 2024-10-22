@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
@@ -92,6 +93,40 @@ namespace HospitalManagement.Model
                 CloseConnection();
             }
             return username;
+        }
+
+        public DataTable GetAppointmentNotesByDoctorUsername(string doctorUsername)
+        {
+            DataTable notesTable = new DataTable();
+            try
+            {
+                OpenConnection();
+                string query = @"
+    SELECT a.appointmentDate, a.notes, u.firstName AS PatientFirstName, u.lastName AS PatientLastName, a.status 
+    FROM HealthManagement.dbo.Appointments AS a
+    JOIN HealthManagement.dbo.Users AS u ON a.patientID = u.userID
+    JOIN HealthManagement.dbo.Doctors AS d ON a.doctorID = d.doctorID
+    JOIN HealthManagement.dbo.Users AS du ON d.userID = du.userID
+    WHERE du.username = @DoctorUsername";
+
+                using (SqlCommand command = new SqlCommand(query, GetConnection()))
+                {
+                    command.Parameters.AddWithValue("@DoctorUsername", doctorUsername);
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                    {
+                        adapter.Fill(notesTable);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving appointment notes: " + ex.Message);
+            }
+            finally
+            {
+                CloseConnection();
+            }
+            return notesTable;
         }
 
     }
