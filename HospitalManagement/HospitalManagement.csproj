@@ -212,6 +212,8 @@
     <Content Include="View\Login\Login.aspx" />
     <Content Include="View\Login\mfaVerification.aspx" />
     <Content Include="View\Patient\patientDashboard.aspx" />
+    <Content Include="View\Patient\updateProfile.aspx" />
+    <Content Include="View\Patient\viewRecords.aspx" />
     <Content Include="View\styles.css" />
     <Content Include="Web.config" />
   </ItemGroup>
@@ -293,6 +295,20 @@
     </Compile>
     <Compile Include="View\Patient\patientDashboard.aspx.designer.cs">
       <DependentUpon>patientDashboard.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="View\Patient\updateProfile.aspx.cs">
+      <DependentUpon>updateProfile.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="View\Patient\updateProfile.aspx.designer.cs">
+      <DependentUpon>updateProfile.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="View\Patient\viewRecords.aspx.cs">
+      <DependentUpon>viewRecords.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="View\Patient\viewRecords.aspx.designer.cs">
+      <DependentUpon>viewRecords.aspx</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

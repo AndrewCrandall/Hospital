@@ -42,7 +42,7 @@ namespace HospitalManagement.Model
                  WHERE u.username = @PatientUsername),
                 @AppointmentDate,
                 @Notes,
-                'completed'
+                'Confirmed'
             );";
 
                 using (SqlCommand command = new SqlCommand(query, GetConnection()))
@@ -101,18 +101,46 @@ namespace HospitalManagement.Model
             try
             {
                 OpenConnection();
-                string query = @"
-    SELECT a.appointmentDate, a.notes, u.firstName AS PatientFirstName, u.lastName AS PatientLastName, a.status 
-    FROM HealthManagement.dbo.Appointments AS a
-    JOIN HealthManagement.dbo.Users AS u ON a.patientID = u.userID
-    JOIN HealthManagement.dbo.Doctors AS d ON a.doctorID = d.doctorID
-    JOIN HealthManagement.dbo.Users AS du ON d.userID = du.userID
-    WHERE du.username = @DoctorUsername";
 
-                using (SqlCommand command = new SqlCommand(query, GetConnection()))
+                // First, get the doctorID using the doctorUsername
+                string doctorIdQuery = @"
+            SELECT d.doctorID 
+            FROM HealthManagement.dbo.Users AS u
+            JOIN HealthManagement.dbo.Doctors AS d ON u.userID = d.userID
+            WHERE u.username = @DoctorUsername";
+
+                int doctorID;
+                using (SqlCommand idCommand = new SqlCommand(doctorIdQuery, GetConnection()))
                 {
-                    command.Parameters.AddWithValue("@DoctorUsername", doctorUsername);
-                    using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                    idCommand.Parameters.AddWithValue("@DoctorUsername", doctorUsername);
+                    var result = idCommand.ExecuteScalar();
+                    if (result != null)
+                    {
+                        doctorID = Convert.ToInt32(result);
+                    }
+                    else
+                    {
+                        throw new Exception("Doctor not found with the specified username.");
+                    }
+                }
+
+                // Now, retrieve the appointments using the doctorID
+                string appointmentQuery = @"
+            SELECT 
+                a.appointmentDate, 
+                a.notes, 
+                u.firstName AS PatientFirstName, 
+                u.lastName AS PatientLastName, 
+                a.status 
+            FROM HealthManagement.dbo.Appointments AS a
+            JOIN HealthManagement.dbo.Patients AS p ON a.patientID = p.patientID
+            JOIN HealthManagement.dbo.Users AS u ON p.userID = u.userID
+            WHERE a.doctorID = @DoctorID";
+
+                using (SqlCommand appointmentCommand = new SqlCommand(appointmentQuery, GetConnection()))
+                {
+                    appointmentCommand.Parameters.AddWithValue("@DoctorID", doctorID);
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(appointmentCommand))
                     {
                         adapter.Fill(notesTable);
                     }
@@ -128,6 +156,8 @@ namespace HospitalManagement.Model
             }
             return notesTable;
         }
+
+
 
     }
 }

@@ -7,11 +7,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace HospitalManagement.View
+namespace HospitalManagement.View.Patient
 {
 
 
-    public partial class patientDashboard
+    public partial class viewRecords
     {
 
         /// <summary>
@@ -24,30 +24,21 @@ namespace HospitalManagement.View
         protected global::System.Web.UI.HtmlControls.HtmlForm form1;
 
         /// <summary>
-        /// welcomeLabel control.
+        /// RecordsGridView control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label welcomeLabel;
+        protected global::System.Web.UI.WebControls.GridView RecordsGridView;
 
         /// <summary>
-        /// usernameLabel control.
+        /// BackButton control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label usernameLabel;
-
-        /// <summary>
-        /// logoutButton control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Button logoutButton;
+        protected global::System.Web.UI.WebControls.Button BackButton;
     }
 }
