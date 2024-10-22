@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.Model; // Ensure the correct namespace for doctorManager
+using HospitalManagement.Utilities; // Add namespace for InputValidator
 using System;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -9,17 +10,23 @@ namespace HospitalManagement.View.Doctor
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            // Check if the session variables are null
+            if (Session["Username"] == null || Session["UserType"] == null)
+            {
+                // Redirect to the login page or an error page
+                Response.Redirect("~/View/Login.aspx");
+            }
         }
-
 
         protected void SaveNotes_Click(object sender, EventArgs e)
         {
             try
             {
-                string firstName = patientFirstName.Text.Trim();
-                string lastName = patientLastName.Text.Trim();
-                string notesText = notes.Text.Trim();
-                string appointmentDateText = appointmentDate.Text.Trim();
+                // Sanitize input
+                string firstName = InputValidator.SanitizeInput(patientFirstName.Text);
+                string lastName = InputValidator.SanitizeInput(patientLastName.Text);
+                string notesText = InputValidator.SanitizeInput(notes.Text);
+                string appointmentDateText = InputValidator.SanitizeInput(appointmentDate.Text);
 
                 // Get the username from the session
                 string doctorUsername = Session["Username"]?.ToString();
@@ -61,14 +68,10 @@ namespace HospitalManagement.View.Doctor
             appointmentDate.Text = string.Empty;
         }
 
-
         protected void Cancel_Click(object sender, EventArgs e)
         {
             // Clear all text fields
-            patientFirstName.Text = string.Empty;
-            patientLastName.Text = string.Empty;    
-            notes.Text = string.Empty;
-            appointmentDate.Text = string.Empty;
+            ClearFields();
         }
 
         protected void Back_Click(object sender, EventArgs e)

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using Twilio.Http;
+using HospitalManagement.Utilities; // Add namespace for InputValidator
 
 namespace HospitalManagement.View.Admin
 {
@@ -12,12 +10,17 @@ namespace HospitalManagement.View.Admin
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            // Check if the session variables are null
+            if (Session["Username"] == null || Session["UserType"] == null)
+            {
+                // Redirect to the login page or an error page
+                Response.Redirect("~/View/Login.aspx");
+            }
             if (!IsPostBack)
             {
                 BindGrid();
             }
         }
-
 
         protected void Back_Click(object sender, EventArgs e)
         {
@@ -36,15 +39,15 @@ namespace HospitalManagement.View.Admin
 
         protected void Search_Click(object sender, EventArgs e)
         {
-            string userID = userIdInput.Text;
+            // Sanitize user ID input
+            string userID = InputValidator.SanitizeInput(userIdInput.Text);
 
-            int userId;
-            if (int.TryParse(userID, out userId))
+            if (int.TryParse(userID, out int userId))
             {
                 AdminManager adminManager = new AdminManager();
                 List<UserData> appointments = adminManager.SearchAppointments(userId);
 
-                // Bind the appointments to a control, e.g., GridView or Repeater
+                // Bind the appointments to the GridView
                 AppointmentGridView.DataSource = appointments;
                 AppointmentGridView.DataBind();
             }
@@ -54,9 +57,6 @@ namespace HospitalManagement.View.Admin
                 ClientScript.RegisterStartupScript(this.GetType(), "InvalidUserId", "alert('Invalid User ID.');", true);
             }
         }
-
-
-
 
         protected void Save_Click(object sender, EventArgs e)
         {
@@ -70,8 +70,10 @@ namespace HospitalManagement.View.Admin
                 {
                     // Retrieve the IDs or keys you need for the update
                     int appointmentId = Convert.ToInt32(AppointmentGridView.DataKeys[row.RowIndex].Value);
-                    string visitDate = ((TextBox)row.Cells[4].Controls[0]).Text;
-                    string notes = ((TextBox)row.Cells[5].Controls[0]).Text;
+
+                    // Sanitize inputs from the row
+                    string visitDate = InputValidator.SanitizeInput(((TextBox)row.Cells[4].Controls[0]).Text);
+                    string notes = InputValidator.SanitizeInput(((TextBox)row.Cells[5].Controls[0]).Text);
 
                     // Call the update function to update the database
                     bool success = adminManager.UpdateAppointment(appointmentId, visitDate, notes);
@@ -99,7 +101,6 @@ namespace HospitalManagement.View.Admin
             BindGrid();
         }
 
-
         protected void AppointmentGridView_RowEditing(object sender, GridViewEditEventArgs e)
         {
             // Set the row to edit
@@ -112,13 +113,13 @@ namespace HospitalManagement.View.Admin
             // Get the row being edited
             GridViewRow row = AppointmentGridView.Rows[e.RowIndex];
 
-            // Get values from the edited row
-            string patientFirstName = ((TextBox)row.Cells[0].Controls[0]).Text;
-            string patientLastName = ((TextBox)row.Cells[1].Controls[0]).Text;
-            string doctorFirstName = ((TextBox)row.Cells[2].Controls[0]).Text;
-            string doctorLastName = ((TextBox)row.Cells[3].Controls[0]).Text;
-            string visitDate = ((TextBox)row.Cells[4].Controls[0]).Text;
-            string notes = ((TextBox)row.Cells[5].Controls[0]).Text;
+            // Get values from the edited row and sanitize
+            string patientFirstName = InputValidator.SanitizeInput(((TextBox)row.Cells[0].Controls[0]).Text);
+            string patientLastName = InputValidator.SanitizeInput(((TextBox)row.Cells[1].Controls[0]).Text);
+            string doctorFirstName = InputValidator.SanitizeInput(((TextBox)row.Cells[2].Controls[0]).Text);
+            string doctorLastName = InputValidator.SanitizeInput(((TextBox)row.Cells[3].Controls[0]).Text);
+            string visitDate = InputValidator.SanitizeInput(((TextBox)row.Cells[4].Controls[0]).Text);
+            string notes = InputValidator.SanitizeInput(((TextBox)row.Cells[5].Controls[0]).Text);
 
             // Here you would typically update the database with the new values
             // UpdateDatabase(patientFirstName, patientLastName, doctorFirstName, doctorLastName, visitDate, notes);
@@ -141,6 +142,5 @@ namespace HospitalManagement.View.Admin
             // Example: AppointmentGridView.DataSource = GetData();
             AppointmentGridView.DataBind();
         }
-
     }
 }

@@ -2,6 +2,7 @@
 using System.Data;
 using System.Web.UI;
 using HospitalManagement.Model;
+using HospitalManagement.Utilities; // Ensure to include the namespace for InputValidator
 
 namespace HospitalManagement.View.Patient
 {
@@ -11,6 +12,12 @@ namespace HospitalManagement.View.Patient
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            // Check if the session variables are null
+            if (Session["Username"] == null || Session["UserType"] == null)
+            {
+                // Redirect to the login page or an error page
+                Response.Redirect("~/View/Login.aspx");
+            }
             if (!IsPostBack)
             {
                 LoadUserData(); // Load existing user data
@@ -37,6 +44,19 @@ namespace HospitalManagement.View.Patient
 
         protected void btnUpdate_Click(object sender, EventArgs e)
         {
+            // Sanitize and validate inputs
+            string sanitizedUsername = InputValidator.SanitizeInput(txtUsername.Text);
+            string sanitizedPassword = InputValidator.SanitizeInput(txtPassword.Text);
+            string sanitizedFirstName = InputValidator.SanitizeInput(txtFirstName.Text);
+            string sanitizedLastName = InputValidator.SanitizeInput(txtLastName.Text);
+            string sanitizedEmail = InputValidator.SanitizeInput(txtEmail.Text);
+
+            if (!InputValidator.IsValidInput(sanitizedUsername, sanitizedPassword))
+            {
+                lblMessage.Text = "Invalid username or password. Please check your inputs.";
+                return;
+            }
+
             // Get the current username from the session
             string currentUsername = Session["Username"].ToString();
             int userID = patientManager.GetUserIdByUsername(currentUsername);
@@ -44,18 +64,17 @@ namespace HospitalManagement.View.Patient
             // Update the user profile with new details
             bool success = patientManager.UpdateUserProfile(
                 userID,
-                txtUsername.Text,
-                txtPassword.Text,
-                txtFirstName.Text,
-                txtLastName.Text,
-                txtEmail.Text
+                sanitizedUsername,
+                sanitizedPassword,
+                sanitizedFirstName,
+                sanitizedLastName,
+                sanitizedEmail
             );
 
             if (success)
             {
                 // Update the session with the new username
-                Session["Username"] = txtUsername.Text;
-
+                Session["Username"] = sanitizedUsername;
                 lblMessage.Text = "Profile updated successfully!";
             }
             else
@@ -66,12 +85,7 @@ namespace HospitalManagement.View.Patient
 
         protected void btnCancel_Click(object sender, EventArgs e)
         {
-            // Clear all fields
-            txtUsername.Text = "";
-            txtPassword.Text = "";
-            txtFirstName.Text = "";
-            txtLastName.Text = "";
-            txtEmail.Text = "";
+            LoadUserData();
         }
 
         protected void btnBack_Click(object sender, EventArgs e)

@@ -10,6 +10,12 @@ namespace HospitalManagement.View.Doctor
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            // Check if the session variables are null
+            if (Session["Username"] == null || Session["UserType"] == null)
+            {
+                // Redirect to the login page or an error page
+                Response.Redirect("~/View/Login.aspx");
+            }
             if (!IsPostBack)
             {
                 LoadAppointmentNotes();

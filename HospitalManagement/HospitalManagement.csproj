@@ -222,6 +222,7 @@
     <Compile Include="Model\database.cs" />
     <Compile Include="Model\DatabaseConnectionManager.cs" />
     <Compile Include="Model\doctorManager.cs" />
+    <Compile Include="Model\InputValidator.cs" />
     <Compile Include="Model\LoginManager.cs" />
     <Compile Include="Model\patientManager.cs" />
     <Compile Include="obj\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs" />

@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.DataAccess;
+using HospitalManagement.Utilities; // Include the utility namespace
 using System;
 using System.Net.Mail;
 using System.Threading.Tasks;
@@ -15,7 +16,6 @@ namespace HospitalManagement
 
         protected async void loginBtn_Click(object sender, EventArgs e)
         {
-            // Call the new function and check if it returns true
             bool redirectToMfa = await HandleUserLoginAsync();
 
             if (redirectToMfa)
@@ -27,7 +27,6 @@ namespace HospitalManagement
                 }
                 catch (Exception ex)
                 {
-                    // Handle any other exceptions that occur during redirection
                     Response.Write($"<script>alert('An error occurred when navigating to MFA: {ex.Message}');</script>");
                 }
             }
@@ -37,19 +36,23 @@ namespace HospitalManagement
         {
             LoginManager userDataAccess = new LoginManager();
 
+            string username = InputValidator.SanitizeInput(usernameTxt.Text);
+            string password = InputValidator.SanitizeInput(passwordTxt.Text);
+
+            if (!InputValidator.IsValidInput(username, password))
+            {
+                Response.Write("<script>alert('Invalid username or password format.');</script>");
+                return false;
+            }
+
             try
             {
-                // Validate the user
-
-                var (isValidUser, userType) = userDataAccess.ValidateUser(usernameTxt.Text, passwordTxt.Text);
+                var (isValidUser, userType) = userDataAccess.ValidateUser(username, password);
 
                 if (isValidUser)
                 {
-                    // Generate the MFA code
                     var mfaCode = userDataAccess.GenerateMfaCode();
-
-                    // Get the user's email for MFA
-                    string email = userDataAccess.GetEmailForMfa(usernameTxt.Text);
+                    string email = userDataAccess.GetEmailForMfa(username);
 
                     if (string.IsNullOrEmpty(email))
                     {
@@ -59,25 +62,18 @@ namespace HospitalManagement
 
                     try
                     {
-                        // Send the MFA code via email asynchronously
                         await userDataAccess.SendMfaCodeViaEmail(email, mfaCode);
-
-                        // Store MFA code and user information in session
                         Session["MfaCode"] = mfaCode;
-                        Session["Username"] = usernameTxt.Text;
+                        Session["Username"] = username;
                         Session["UserType"] = userType;
-
-                        // Return true to indicate the user should be redirected
                         return true;
                     }
                     catch (SmtpException smtpEx)
                     {
-                        // Handle SMTP-specific exceptions
                         Response.Write($"<script>alert('Email sending failed: {smtpEx.Message}');</script>");
                     }
                     catch (Exception ex)
                     {
-                        // Handle any other exceptions during email sending
                         Response.Write($"<script>alert('An error occurred while sending the MFA code: {ex.Message}');</script>");
                     }
                 }
@@ -88,25 +84,18 @@ namespace HospitalManagement
             }
             catch (ArgumentNullException argEx)
             {
-                // Handle argument null exceptions (e.g., username or password is null)
                 Response.Write($"<script>alert('Invalid input: {argEx.Message}');</script>");
             }
             catch (InvalidOperationException invOpEx)
             {
-                // Handle invalid operation exceptions
                 Response.Write($"<script>alert('An error occurred during the operation: {invOpEx.Message}');</script>");
             }
             catch (Exception ex)
             {
-                // Handle any other general exceptions
                 Response.Write($"<script>alert('An unexpected error occurred: {ex.Message}');</script>");
             }
-                
 
-            // Return false to indicate the user should not be redirected
             return false;
         }
     }
-                
-
 }

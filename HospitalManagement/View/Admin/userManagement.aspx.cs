@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Web.UI;
+using HospitalManagement.Utilities; // Add namespace for InputValidator
 
 namespace HospitalManagement.View.Admin
 {
@@ -7,6 +8,12 @@ namespace HospitalManagement.View.Admin
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            // Check if the session variables are null
+            if (Session["Username"] == null || Session["UserType"] == null)
+            {
+                // Redirect to the login page or an error page
+                Response.Redirect("~/View/Login.aspx");
+            }
         }
 
         protected void Back_Click(object sender, EventArgs e)
@@ -30,11 +37,18 @@ namespace HospitalManagement.View.Admin
         protected void Save_Click(object sender, EventArgs e)
         {
             // Get the updated values from the input fields
-            string firstName = displayFirstName.Text;
-            string lastName = displayLastName.Text;
-            string username = displayUsername.Text;
+            string firstName = InputValidator.SanitizeInput(displayFirstName.Text);
+            string lastName = InputValidator.SanitizeInput(displayLastName.Text);
+            string username = InputValidator.SanitizeInput(displayUsername.Text);
             string userType = displayUserType.SelectedValue; // Get selected value from dropdown
             string userID = userIdInput.Text;
+
+            // Validate user ID
+            if (!int.TryParse(userID, out _))
+            {
+                ClientScript.RegisterStartupScript(this.GetType(), "InvalidUserId", "alert('User ID must be a number.');", true);
+                return;
+            }
 
             // Create an instance of AdminManager
             AdminManager adminManager = new AdminManager();
@@ -57,13 +71,19 @@ namespace HospitalManagement.View.Admin
             }
         }
 
-
         protected void Search_Click(object sender, EventArgs e)
         {
             // Get input values
-            string firstName = firstNameInput.Text;
-            string lastName = lastNameInput.Text;
-            string userId = userIdInput.Text;
+            string firstName = InputValidator.SanitizeInput(firstNameInput.Text);
+            string lastName = InputValidator.SanitizeInput(lastNameInput.Text);
+            string userId = InputValidator.SanitizeInput(userIdInput.Text);
+
+            // Validate user ID
+            if (!int.TryParse(userId, out _))
+            {
+                ClientScript.RegisterStartupScript(this.GetType(), "InvalidUserId", "alert('User ID must be a number.');", true);
+                return;
+            }
 
             // Create an instance of AdminManager
             AdminManager adminManager = new AdminManager();
@@ -77,7 +97,7 @@ namespace HospitalManagement.View.Admin
                 // Populate the readonly fields with the found user's details
                 displayFirstName.Text = foundUser.FirstName;
                 displayLastName.Text = foundUser.LastName;
-                displayUsername.Text = foundUser.Username; // Set the label'
+                displayUsername.Text = foundUser.Username;
                 displayAddress.Text = foundUser.Email;
                 displayUserType.SelectedValue = foundUser.UserType; // Set the selected value based on found user
             }
