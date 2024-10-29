@@ -97,5 +97,11 @@ namespace HospitalManagement
 
             return false;
         }
+        protected void RegisterBtn_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("~/View/Login/Register.aspx"); // Redirects to the registration page
+            Context.ApplicationInstance.CompleteRequest();
+
+        }
     }
 }

@@ -7,8 +7,9 @@ using System.Web.Security;
 using System.Threading.Tasks;
 using System.Net.Mail;
 using System.Net;
-using Twilio.Http;
+using System.Security.Cryptography;
 using System.Data;
+using System.Text;
 public class LoginManager : SqlConnectionManager
 {
     public LoginManager() : base() // Calls the base constructor
@@ -20,21 +21,27 @@ public class LoginManager : SqlConnectionManager
         try
         {
             OpenConnection();
-            string query = "SELECT userType FROM Users WHERE username=@username AND password=@password;";
+            string query = "SELECT userType, password FROM Users WHERE username=@username;";
 
             using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {
                 command.Parameters.AddWithValue("@username", username);
-                command.Parameters.AddWithValue("@password", password);
 
-                var result = command.ExecuteScalar();
-                if (result != null)
+                using (var reader = command.ExecuteReader())
                 {
-                    string userType = result.ToString();
-                    return (true, userType);
-                }
-                else
+                    if (reader.Read())
+                    {
+                        string storedUserType = reader["userType"].ToString();
+                        string storedPassword = reader["password"].ToString();
+
+                        // Directly compare the input password with the stored password
+                        if (storedPassword.Equals(password, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return (true, storedUserType);
+                        }
+                    }
                     return (false, null);
+                }
             }
         }
         catch (Exception ex)
@@ -47,6 +54,8 @@ public class LoginManager : SqlConnectionManager
             CloseConnection();
         }
     }
+
+
 
     public string GenerateMfaCode()
     {
@@ -177,6 +186,59 @@ public class LoginManager : SqlConnectionManager
             default:
                 context.Response.Write("<script>alert('Unknown user type.');</script>");
                 break;
+        }
+    }
+public static class PasswordHelper
+{
+    public static string HashPassword(string password)
+    {
+        using (var sha256 = SHA256.Create())
+        {
+            // Convert the password into bytes
+            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+
+            // Convert byte array to string
+            StringBuilder builder = new StringBuilder();
+            foreach (var b in bytes)
+            {
+                builder.Append(b.ToString("x2"));
+            }
+            return builder.ToString();
+        }
+    }
+}
+
+
+
+    public void RegisterNewUser(string username, string password, string email, string firstName, string lastName)
+    {
+        // Hash the password
+        string hashedPassword = PasswordHelper.HashPassword(password);
+        string userType = "Patient"; // Hardcoded user type
+        DateTime createdAt = DateTime.Now; // Capture the current date and time
+
+        try
+        {
+                OpenConnection();
+                string query = "INSERT INTO Users (username, password, email, firstName, lastName, userType, createdAt) " +
+                               "VALUES (@username, @password, @email, @firstName, @lastName, @userType, @createdAt);";
+
+            using (SqlCommand command = new SqlCommand(query, GetConnection()))
+            {
+                command.Parameters.AddWithValue("@username", username);
+                command.Parameters.AddWithValue("@password", hashedPassword);
+                command.Parameters.AddWithValue("@email", email);
+                command.Parameters.AddWithValue("@firstName", firstName);
+                command.Parameters.AddWithValue("@lastName", lastName);
+                command.Parameters.AddWithValue("@userType", userType); // Use the hardcoded value
+                command.Parameters.AddWithValue("@createdAt", createdAt); // Set the createdAt value
+
+                command.ExecuteNonQuery();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
         }
     }
 

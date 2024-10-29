@@ -21,6 +21,7 @@
                 <div>
                     <asp:Button ID="cancelBtn" runat="server" Text="Cancel" CssClass="btn" />
                     <asp:Button ID="loginBtn" runat="server" Text="Login" CssClass="btn" OnClick="loginBtn_Click" />
+                    <asp:Button ID="registerBtn" runat="server" Text="Register" CssClass="btn" OnClick="RegisterBtn_Click" />
                 </div>
             </fieldset>
         </div>

@@ -11,7 +11,7 @@ namespace HospitalManagement
 {
 
 
-    public partial class Login
+    public partial class Register
     {
 
         /// <summary>
@@ -42,22 +42,31 @@ namespace HospitalManagement
         protected global::System.Web.UI.WebControls.TextBox passwordTxt;
 
         /// <summary>
-        /// cancelBtn control.
+        /// emailTxt control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button cancelBtn;
+        protected global::System.Web.UI.WebControls.TextBox emailTxt;
 
         /// <summary>
-        /// loginBtn control.
+        /// firstNameTxt control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button loginBtn;
+        protected global::System.Web.UI.WebControls.TextBox firstNameTxt;
+
+        /// <summary>
+        /// lastNameTxt control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox lastNameTxt;
 
         /// <summary>
         /// registerBtn control.
@@ -67,5 +76,14 @@ namespace HospitalManagement
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button registerBtn;
+
+        /// <summary>
+        /// backBtn control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button backBtn;
     }
 }

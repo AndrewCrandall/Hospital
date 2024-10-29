@@ -211,6 +211,7 @@
     <Content Include="View\Doctor\viewNotes.aspx" />
     <Content Include="View\Login\Login.aspx" />
     <Content Include="View\Login\mfaVerification.aspx" />
+    <Content Include="View\Login\Register.aspx" />
     <Content Include="View\Patient\patientDashboard.aspx" />
     <Content Include="View\Patient\updateProfile.aspx" />
     <Content Include="View\Patient\viewRecords.aspx" />
@@ -289,6 +290,13 @@
     </Compile>
     <Compile Include="View\Login\mfaVerification.aspx.designer.cs">
       <DependentUpon>mfaVerification.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="View\Login\Register.aspx.cs">
+      <DependentUpon>Register.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="View\Login\Register.aspx.designer.cs">
+      <DependentUpon>Register.aspx</DependentUpon>
     </Compile>
     <Compile Include="View\Patient\patientDashboard.aspx.cs">
       <DependentUpon>patientDashboard.aspx</DependentUpon>
