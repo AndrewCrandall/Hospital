@@ -2,58 +2,56 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
+using System.Security.Cryptography;
 
 namespace HospitalManagement.Model
 {
     public class doctorManager : SqlConnectionManager
     {
-        public doctorManager() : base() // Calls the base constructor
-        {
-        }
+        private readonly EncryptionManager _encryptionManager;
 
+        public doctorManager() : base()
+        {
+            _encryptionManager = new EncryptionManager(); // Instantiate EncryptionManager
+        }
 
         public bool AddAppointment(string doctorUsername, string patientFirstName, string patientLastName, string appointmentDate, string notes)
         {
             try
             {
-                // Get the patient's username based on first and last name
                 string patientUsername = GetPatientUsername(patientFirstName, patientLastName);
                 if (string.IsNullOrEmpty(patientUsername))
                 {
                     throw new Exception("Patient not found.");
                 }
 
-                // Open the database connection
                 OpenConnection();
 
-                // Insert a new appointment
                 string query = @"
-            INSERT INTO HealthManagement.dbo.Appointments (doctorID, patientID, appointmentDate, notes, status)
-            VALUES (
-                (SELECT d.doctorID 
-                 FROM HealthManagement.dbo.Users AS u
-                 JOIN HealthManagement.dbo.Doctors AS d ON u.userID = d.userID
-                 WHERE u.username = @DoctorUsername),
-                (SELECT p.patientID 
-                 FROM HealthManagement.dbo.Users AS u
-                 JOIN HealthManagement.dbo.Patients AS p ON u.userID = p.userID
-                 WHERE u.username = @PatientUsername),
-                @AppointmentDate,
-                @Notes,
-                'Confirmed'
-            );";
+                    INSERT INTO HealthManagement.dbo.Appointments (doctorID, patientID, appointmentDate, notes, status)
+                    VALUES (
+                        (SELECT d.doctorID 
+                         FROM HealthManagement.dbo.Users AS u
+                         JOIN HealthManagement.dbo.Doctors AS d ON u.userID = d.userID
+                         WHERE u.username = @DoctorUsername),
+                        (SELECT p.patientID 
+                         FROM HealthManagement.dbo.Users AS u
+                         JOIN HealthManagement.dbo.Patients AS p ON u.userID = p.userID
+                         WHERE u.username = @PatientUsername),
+                        @AppointmentDate,
+                        @Notes,
+                        'Confirmed'
+                    );";
 
                 using (SqlCommand command = new SqlCommand(query, GetConnection()))
                 {
                     command.Parameters.AddWithValue("@DoctorUsername", doctorUsername);
                     command.Parameters.AddWithValue("@PatientUsername", patientUsername);
-                    command.Parameters.AddWithValue("@AppointmentDate", DateTime.Parse(appointmentDate)); // Ensure the date is in the correct format
+                    command.Parameters.AddWithValue("@AppointmentDate", DateTime.Parse(appointmentDate));
                     command.Parameters.AddWithValue("@Notes", notes);
 
                     int rowsAffected = command.ExecuteNonQuery();
-                    return rowsAffected > 0; // Return true if the insert was successful
+                    return rowsAffected > 0;
                 }
             }
             catch (Exception ex)
@@ -65,7 +63,6 @@ namespace HospitalManagement.Model
                 CloseConnection();
             }
         }
-
 
         private string GetPatientUsername(string firstName, string lastName)
         {
@@ -102,7 +99,6 @@ namespace HospitalManagement.Model
             {
                 OpenConnection();
 
-                // First, get the doctorID using the doctorUsername
                 string doctorIdQuery = @"
             SELECT d.doctorID 
             FROM HealthManagement.dbo.Users AS u
@@ -124,7 +120,6 @@ namespace HospitalManagement.Model
                     }
                 }
 
-                // Now, retrieve the appointments using the doctorID
                 string appointmentQuery = @"
             SELECT 
                 a.appointmentDate, 
@@ -145,6 +140,20 @@ namespace HospitalManagement.Model
                         adapter.Fill(notesTable);
                     }
                 }
+
+                // Decrypt the notes after fetching
+                var (key, iv) = _encryptionManager.RetrieveLatestKey();
+                if (key == null || iv == null)
+                {
+                    throw new Exception("No encryption key or IV found in the database.");
+                }
+
+                foreach (DataRow row in notesTable.Rows)
+                {
+                    var encryptedNotes = row["notes"].ToString();
+                    var decryptedNotes = _encryptionManager.Decrypt(encryptedNotes);
+                    row["notes"] = decryptedNotes; // Replace encrypted notes with decrypted notes
+                }
             }
             catch (Exception ex)
             {
@@ -157,7 +166,121 @@ namespace HospitalManagement.Model
             return notesTable;
         }
 
+        public void EncryptExistingNotes()
+        {
+            if (!OpenConnection())
+                throw new Exception("Could not open database connection.");
 
+            try
+            {
+                // Fetch existing appointments
+                var appointments = FetchExistingAppointments();
 
+                // Retrieve the latest key and IV from the database
+                var (key, iv) = _encryptionManager.RetrieveLatestKey();
+                if (key == null || iv == null)
+                {
+                    throw new Exception("No encryption key or IV found in the database.");
+                }
+
+                // Loop through each appointment and encrypt the notes
+                foreach (var appointment in appointments)
+                {
+                    // Encrypt the notes using the retrieved key and IV
+                    var encryptedNotes = _encryptionManager.Encrypt(appointment.Notes, key, iv);
+
+                    // Update the appointment notes in the database
+                    UpdateAppointmentNotes(appointment.AppointmentID, encryptedNotes);
+                }
+            }
+            finally
+            {
+                CloseConnection();
+            }
+        }
+
+        private List<Appointment> FetchExistingAppointments()
+        {
+            var appointments = new List<Appointment>();
+
+            using (var command = new SqlCommand("SELECT [appointmentID], [notes] FROM [HealthManagement].[dbo].[Appointments]", GetConnection()))
+            {
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        appointments.Add(new Appointment
+                        {
+                            AppointmentID = reader.GetInt32(0),
+                            Notes = reader.GetString(1)
+                        });
+                    }
+                }
+            }
+
+            return appointments;
+        }
+
+        public bool UpdateAppointmentNotes(int appointmentId, string encryptedNotes)
+        {
+            try
+            {
+                OpenConnection();
+                using (var command = new SqlCommand("UPDATE Appointments SET notes = @Notes WHERE appointmentID = @AppointmentID", GetConnection()))
+                {
+                    command.Parameters.AddWithValue("@Notes", encryptedNotes);
+                    command.Parameters.AddWithValue("@AppointmentID", appointmentId);
+                    int rowsAffected = command.ExecuteNonQuery();
+                    return rowsAffected > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error updating appointment notes: " + ex.Message);
+            }
+            finally
+            {
+                CloseConnection();
+            }
+        }
+
+        public void SaveEncryptionKey(byte[] key)
+        {
+            // Generate a new IV
+            byte[] iv = new byte[16]; // 128 bits for AES
+            using (var rng = new RNGCryptoServiceProvider())
+            {
+                rng.GetBytes(iv);
+            }
+
+            try
+            {
+                // Open the database connection
+                if (!OpenConnection())
+                    throw new Exception("Could not open database connection.");
+
+                using (var command = new SqlCommand("INSERT INTO EncryptionKeys (EncryptionKey, IV, CreatedAt) VALUES (@EncryptionKey, @IV, @CreatedAt)", GetConnection()))
+                {
+                    command.Parameters.AddWithValue("@EncryptionKey", key);
+                    command.Parameters.AddWithValue("@IV", iv);
+                    command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow); // Store creation time
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error saving encryption key: " + ex.Message);
+            }
+            finally
+            {
+                CloseConnection(); // Ensure the connection is closed after the operation
+            }
+        }
+
+        public class Appointment
+        {
+            public int AppointmentID { get; set; }
+            public string Notes { get; set; }
+        }
     }
 }

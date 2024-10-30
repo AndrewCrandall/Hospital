@@ -26,7 +26,7 @@ namespace HospitalManagement.View.Doctor
         {
             try
             {
-                // Get the doctor's username from the session (assuming it's stored there)
+                // Get the doctor's username from the session
                 string doctorUsername = Session["Username"]?.ToString();
 
                 if (!string.IsNullOrEmpty(doctorUsername))
@@ -34,7 +34,18 @@ namespace HospitalManagement.View.Doctor
                     doctorManager docManager = new doctorManager();
                     DataTable appointmentNotes = docManager.GetAppointmentNotesByDoctorUsername(doctorUsername);
 
-                    // Bind the data to the GridView
+                    // Create an instance of EncryptionManager to decrypt the notes
+                    EncryptionManager encryptionManager = new EncryptionManager();
+
+                    // Loop through the rows and decrypt the notes
+                    foreach (DataRow row in appointmentNotes.Rows)
+                    {
+                        string encryptedNote = row["notes"].ToString(); // Assuming "notes" is the column name
+                        string decryptedNote = encryptionManager.Decrypt(encryptedNote);
+                        row["notes"] = decryptedNote; // Replace the encrypted note with the decrypted note
+                    }
+
+                    // Bind the decrypted data to the GridView
                     NotesGridView.DataSource = appointmentNotes;
                     NotesGridView.DataBind();
                 }
