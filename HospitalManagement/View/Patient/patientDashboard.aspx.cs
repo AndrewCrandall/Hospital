@@ -29,7 +29,7 @@ namespace HospitalManagement.View
                 }
                 else
                 {
-                    usernameLabel.Text = "Welcome to the Doctor Dashboard";
+                    usernameLabel.Text = "Welcome to the Patient Dashboard";
                 }
             }
         }

@@ -34,8 +34,8 @@ public class LoginManager : SqlConnectionManager
                         string storedUserType = reader["userType"].ToString();
                         string storedPassword = reader["password"].ToString();
 
-                        // Directly compare the input password with the stored password
-                        if (storedPassword.Equals(password, StringComparison.OrdinalIgnoreCase))
+                        // Verify the input password against the stored hashed password
+                        if (StringHasher.VerifyString(password, storedPassword))
                         {
                             return (true, storedUserType);
                         }
@@ -57,6 +57,8 @@ public class LoginManager : SqlConnectionManager
 
 
 
+
+
     public string GenerateMfaCode()
     {
         var random = new Random();
@@ -68,7 +70,7 @@ public class LoginManager : SqlConnectionManager
     {
         var fromAddress = new MailAddress("healthcarecsc4022@gmail.com", "Your App Name");
         var toAddress = new MailAddress(email);
-        const string fromPassword = "wahg wyhj xobc swuk"; // Use the App Password here
+        const string fromPassword = "wahg wyhj xobc swuk"; // Use the App Password 
         const string subject = "Your MFA Code";
         string body = $"Your MFA code is: {mfaCode}";
 
@@ -213,15 +215,15 @@ public static class PasswordHelper
     public void RegisterNewUser(string username, string password, string email, string firstName, string lastName)
     {
         // Hash the password
-        string hashedPassword = PasswordHelper.HashPassword(password);
+        string hashedPassword = StringHasher.HashString(password);
         string userType = "Patient"; // Hardcoded user type
         DateTime createdAt = DateTime.Now; // Capture the current date and time
 
         try
         {
-                OpenConnection();
-                string query = "INSERT INTO Users (username, password, email, firstName, lastName, userType, createdAt) " +
-                               "VALUES (@username, @password, @email, @firstName, @lastName, @userType, @createdAt);";
+            OpenConnection();
+            string query = "INSERT INTO Users (username, password, email, firstName, lastName, userType, createdAt) " +
+                           "VALUES (@username, @password, @email, @firstName, @lastName, @userType, @createdAt);";
 
             using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {
@@ -242,6 +244,122 @@ public static class PasswordHelper
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*
+    
+
+
+    //DELETE LATER
+
+    public void UpdatePasswords()
+    {
+        // Array of passwords to update
+        var passwords = new[]
+        {
+        "password1", "password2", "password3", "password4", "password5",
+        "passwordD1", "passwordD2", "passwordD3", "passwordD4", "passwordD5",
+        "passwordP1", "passwordP2", "passwordP3", "passwordP4", "passwordP5"
+    };
+
+        var usernames = new[]
+        {
+        "admin1", "admin2", "admin3", "admin4", "admin5",
+        "doctor1", "doctor2", "doctor3", "doctor4", "doctor5",
+        "patient1", "patient2", "patient3", "patient4", "patient5"
+    };
+
+        try
+        {
+            OpenConnection();
+
+            for (int i = 0; i < usernames.Length; i++)
+            {
+                string hashedPassword = StringHasher.HashString(passwords[i]);
+                string query = "UPDATE Users SET password = @password WHERE username = @username;";
+
+                using (SqlCommand command = new SqlCommand(query, GetConnection()))
+                {
+                    command.Parameters.AddWithValue("@username", usernames[i]);
+                    command.Parameters.AddWithValue("@password", hashedPassword);
+
+                    int rowsAffected = command.ExecuteNonQuery();
+                    if (rowsAffected == 0)
+                    {
+                        Console.WriteLine($"No user found with username: {usernames[i]}");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    /*
+    public void EncryptAllNotes()
+    {
+        // Hardcoded appointment IDs and their corresponding notes
+        var appointmentIds = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 1002, 2002 };
+        var notes = new[]
+        {
+        "Annual checkup",
+        "Skin rash consultation",
+        "Neurological exam",
+        "Pediatric checkup",
+        "Orthopedic assessment",
+        "test",
+        "test delete later",
+        "Test Delete Later",
+        "test",
+        "Blood work"
+    };
+
+        try
+        {
+            OpenConnection();
+
+            for (int i = 0; i < appointmentIds.Length; i++)
+            {
+                // Encrypt the notes
+                string encryptedNotes = StringHasher.Encrypt(notes[i]);
+
+                // Update the notes in the database
+                string updateQuery = "UPDATE Appointments SET notes = @notes WHERE appointmentID = @appointmentID;";
+                using (SqlCommand updateCommand = new SqlCommand(updateQuery, GetConnection()))
+                {
+                    updateCommand.Parameters.AddWithValue("@notes", encryptedNotes);
+                    updateCommand.Parameters.AddWithValue("@appointmentID", appointmentIds[i]);
+                    updateCommand.ExecuteNonQuery();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Error encrypting notes: " + ex.Message);
+        }
+        finally
+        {
+            CloseConnection();
+        }
+    }
+    */
+
 }
+
 
 

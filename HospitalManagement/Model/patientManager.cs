@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using static LoginManager;
 
 namespace HospitalManagement.Model
 {
@@ -16,7 +17,6 @@ namespace HospitalManagement.Model
             try
             {
                 OpenConnection();
-
                 // Step 1: Get userID from Users table
                 string userIdQuery = "SELECT userID FROM HealthManagement.dbo.Users WHERE username = @Username";
                 int userID = 0;
@@ -31,7 +31,6 @@ namespace HospitalManagement.Model
                     }
                     else
                     {
-                        // Handle case where username does not exist
                         return recordsTable; // Return an empty DataTable
                     }
                 }
@@ -50,29 +49,28 @@ namespace HospitalManagement.Model
                     }
                     else
                     {
-                        // Handle case where userID does not exist in Patients table
                         return recordsTable; // Return an empty DataTable
                     }
                 }
 
                 // Step 3: Get appointment records using patientID
                 string recordsQuery = @"
-            SELECT 
-                u.username, 
-                u.firstName, 
-                u.lastName, 
-                u.email, 
-                a.appointmentID, 
-                a.appointmentDate, 
-                a.notes,
-                du.firstName AS DoctorFirstName, 
-                du.lastName AS DoctorLastName
-            FROM HealthManagement.dbo.Appointments AS a
-            JOIN HealthManagement.dbo.Patients AS p ON a.patientID = p.patientID
-            JOIN HealthManagement.dbo.Users AS u ON p.userID = u.userID
-            JOIN HealthManagement.dbo.Doctors AS d ON a.doctorID = d.doctorID
-            JOIN HealthManagement.dbo.Users AS du ON d.userID = du.userID
-            WHERE p.patientID = @PatientID";
+                    SELECT 
+                        u.username, 
+                        u.firstName, 
+                        u.lastName, 
+                        u.email, 
+                        a.appointmentID, 
+                        a.appointmentDate, 
+                        a.notes,
+                        du.firstName AS DoctorFirstName, 
+                        du.lastName AS DoctorLastName
+                    FROM HealthManagement.dbo.Appointments AS a
+                    JOIN HealthManagement.dbo.Patients AS p ON a.patientID = p.patientID
+                    JOIN HealthManagement.dbo.Users AS u ON p.userID = u.userID
+                    JOIN HealthManagement.dbo.Doctors AS d ON a.doctorID = d.doctorID
+                    JOIN HealthManagement.dbo.Users AS du ON d.userID = du.userID
+                    WHERE p.patientID = @PatientID";
 
                 using (SqlCommand recordsCommand = new SqlCommand(recordsQuery, GetConnection()))
                 {
@@ -95,9 +93,6 @@ namespace HospitalManagement.Model
             return recordsTable;
         }
 
-
-
-
         public bool UpdateUserProfile(int userID, string username, string password, string firstName, string lastName, string email)
         {
             try
@@ -106,13 +101,21 @@ namespace HospitalManagement.Model
 
                 string query = @"
                     UPDATE Users 
-                    SET username = @Username, password = @Password, firstName = @FirstName, lastName = @LastName, email = @Email 
+                    SET username = @Username, 
+                        password = @Password, 
+                        firstName = @FirstName, 
+                        lastName = @LastName, 
+                        email = @Email 
                     WHERE userID = @UserID";
 
                 using (SqlCommand command = new SqlCommand(query, GetConnection()))
                 {
                     command.Parameters.AddWithValue("@Username", username);
-                    command.Parameters.AddWithValue("@Password", password); // Remember to hash passwords in production
+
+                    // Hash the password if it's not empty or null
+                    string hashedPassword = string.IsNullOrWhiteSpace(password) ? null : StringHasher.HashString(password);
+                    command.Parameters.AddWithValue("@Password", hashedPassword); // Store the hashed password
+
                     command.Parameters.AddWithValue("@FirstName", firstName);
                     command.Parameters.AddWithValue("@LastName", lastName);
                     command.Parameters.AddWithValue("@Email", email);
@@ -131,6 +134,7 @@ namespace HospitalManagement.Model
                 CloseConnection();
             }
         }
+
         public int GetUserIdByUsername(string username)
         {
             int userID = 0;
@@ -139,9 +143,9 @@ namespace HospitalManagement.Model
                 OpenConnection();
 
                 string query = @"
-            SELECT userID 
-            FROM HealthManagement.dbo.Users 
-            WHERE username = @Username";
+                    SELECT userID 
+                    FROM HealthManagement.dbo.Users 
+                    WHERE username = @Username";
 
                 using (SqlCommand command = new SqlCommand(query, GetConnection()))
                 {
@@ -164,6 +168,5 @@ namespace HospitalManagement.Model
 
             return userID;
         }
-
     }
 }

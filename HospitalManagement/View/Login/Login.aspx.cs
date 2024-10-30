@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.DataAccess;
+using HospitalManagement.Model;
 using HospitalManagement.Utilities; // Include the utility namespace
 using System;
 using System.Net.Mail;
@@ -12,7 +13,10 @@ namespace HospitalManagement
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+           // LoginManager login = new LoginManager();
+            //login.UpdatePasswords();
         }
+
 
         protected async void loginBtn_Click(object sender, EventArgs e)
         {
