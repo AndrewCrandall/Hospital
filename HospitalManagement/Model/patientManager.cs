@@ -80,6 +80,17 @@ namespace HospitalManagement.Model
                         adapter.Fill(recordsTable);
                     }
                 }
+
+                // Create an instance of EncryptionManager to decrypt the notes
+                EncryptionManager encryptionManager = new EncryptionManager();
+
+                // Decrypt notes for each record
+                foreach (DataRow row in recordsTable.Rows)
+                {
+                    string encryptedNote = row["notes"].ToString(); // Assuming "notes" is the column name
+                    string decryptedNote = encryptionManager.Decrypt(encryptedNote); // Decrypt the note
+                    row["notes"] = decryptedNote; // Replace the encrypted note with the decrypted note
+                }
             }
             catch (Exception ex)
             {

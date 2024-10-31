@@ -1,12 +1,15 @@
-﻿using System;
+﻿using HospitalManagement.Model;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
 public class AdminManager : SqlConnectionManager
 {
+    private readonly EncryptionManager _encryptionManager;
     public AdminManager() : base() // Calls the base constructor
     {
+        _encryptionManager = new EncryptionManager(); // Instantiate EncryptionManager
     }
 
     public DataTable GetAllUsers()
@@ -130,28 +133,26 @@ public class AdminManager : SqlConnectionManager
         {
             OpenConnection();
             string query = @"
-                        SELECT 
-                            u.firstName AS FirstName,  -- Change to match UserData
-                            u.lastName AS LastName,     -- Change to match UserData
-                            d.doctorID,
-                            du.firstName AS DoctorFirstName,
-                            du.lastName AS DoctorLastName,
-                            a.appointmentDate,
-                            a.notes
-                        FROM 
-                            HealthManagement.dbo.Users AS u
-                        JOIN 
-                            HealthManagement.dbo.Patients AS p ON u.userID = p.userID
-                        JOIN 
-                            HealthManagement.dbo.Appointments AS a ON p.patientID = a.patientID
-                        JOIN 
-                            HealthManagement.dbo.Doctors AS d ON a.doctorID = d.doctorID
-                        JOIN 
-                            HealthManagement.dbo.Users AS du ON d.userID = du.userID  
-                        WHERE 
-                            u.userID = @userId;";
-
-
+                    SELECT 
+                        u.firstName AS FirstName, 
+                        u.lastName AS LastName, 
+                        d.doctorID,
+                        du.firstName AS DoctorFirstName,
+                        du.lastName AS DoctorLastName,
+                        a.appointmentDate,
+                        a.notes
+                    FROM 
+                        HealthManagement.dbo.Users AS u
+                    JOIN 
+                        HealthManagement.dbo.Patients AS p ON u.userID = p.userID
+                    JOIN 
+                        HealthManagement.dbo.Appointments AS a ON p.patientID = a.patientID
+                    JOIN 
+                        HealthManagement.dbo.Doctors AS d ON a.doctorID = d.doctorID
+                    JOIN 
+                        HealthManagement.dbo.Users AS du ON d.userID = du.userID  
+                    WHERE 
+                        u.userID = @userId;";
 
             using (SqlCommand command = new SqlCommand(query, GetConnection()))
             {
@@ -159,6 +160,13 @@ public class AdminManager : SqlConnectionManager
 
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
+                    // Retrieve the latest key and IV for decryption
+                    var (key, iv) = _encryptionManager.RetrieveLatestKey(); // Use instance here
+                    if (key == null || iv == null)
+                    {
+                        throw new Exception("No encryption key or IV found in the database.");
+                    }
+
                     while (reader.Read())
                     {
                         var userData = new UserData
@@ -169,7 +177,7 @@ public class AdminManager : SqlConnectionManager
                             DoctorFirstName = reader["DoctorFirstName"].ToString(),
                             DoctorLastName = reader["DoctorLastName"].ToString(),
                             VisitDate = Convert.ToDateTime(reader["appointmentDate"]).ToString("MM/dd/yyyy"),
-                            Notes = reader["notes"].ToString()
+                            Notes = _encryptionManager.Decrypt(reader["notes"].ToString()) // Decrypt the notes
                         };
 
                         appointments.Add(userData);
@@ -188,6 +196,8 @@ public class AdminManager : SqlConnectionManager
 
         return appointments; // Return the list of UserData
     }
+
+
 
 
 
@@ -262,7 +272,26 @@ public class AdminManager : SqlConnectionManager
             CloseConnection();
         }
     }
+    public string EncryptNotes(string notes)
+    {
+        // Retrieve the latest key and IV for encryption
+        var (key, iv) = _encryptionManager.RetrieveLatestKey();
+        if (key == null || iv == null)
+        {
+            throw new Exception("No encryption key or IV found in the database.");
+        }
+
+        // Call the Encrypt method with the key and IV
+        return _encryptionManager.Encrypt(notes, key, iv);
+    }
+
+    public string DecryptNotes(string encryptedNotes)
+    {
+        return _encryptionManager.Decrypt(encryptedNotes); // Decrypt notes for display
+    }
+
 }
+
 
 // Helper Classes
 public class User

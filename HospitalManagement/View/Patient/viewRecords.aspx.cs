@@ -26,7 +26,7 @@ namespace HospitalManagement.View.Patient
         {
             try
             {
-                // Get the patient's username from the session (assuming it's stored there)
+                // Get the patient's username from the session
                 string patientUsername = Session["Username"]?.ToString();
 
                 if (!string.IsNullOrEmpty(patientUsername))
@@ -34,9 +34,29 @@ namespace HospitalManagement.View.Patient
                     patientManager patManager = new patientManager();
                     DataTable patientRecords = patManager.GetPatientRecordsByUsername(patientUsername);
 
-                    // Bind the data to the GridView
-                    RecordsGridView.DataSource = patientRecords;
-                    RecordsGridView.DataBind();
+                    // Check if any records were retrieved
+                    if (patientRecords.Rows.Count > 0)
+                    {
+                        // Create an instance of EncryptionManager
+                        EncryptionManager encryptionManager = new EncryptionManager();
+
+                        // Decrypt the notes in the DataTable
+                        foreach (DataRow row in patientRecords.Rows)
+                        {
+                            string encryptedNote = row["notes"].ToString(); // Assuming "notes" is the column name
+                            string decryptedNote = encryptionManager.Decrypt(encryptedNote); // Decrypt the note
+                            row["notes"] = decryptedNote; // Replace the encrypted note with the decrypted note
+                        }
+
+                        // Bind the data to the GridView
+                        RecordsGridView.DataSource = patientRecords;
+                        RecordsGridView.DataBind();
+                    }
+                    else
+                    {
+                        // Handle case where no records are found
+                        ClientScript.RegisterStartupScript(this.GetType(), "NoRecords", "alert('No patient records found.');", true);
+                    }
                 }
                 else
                 {
@@ -49,6 +69,7 @@ namespace HospitalManagement.View.Patient
                 ClientScript.RegisterStartupScript(this.GetType(), "Error", $"alert('An error occurred: {ex.Message}');", true);
             }
         }
+
 
         protected void BackButton_Click(object sender, EventArgs e)
         {
