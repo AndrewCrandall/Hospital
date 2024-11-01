@@ -53,5 +53,10 @@ namespace HospitalManagement.View.Login
                 Response.Write("<script>alert('Invalid MFA code.');</script>");
             }
         }
+        protected void Cancel_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("~/View/Login.aspx");
+        }
+
     }
 }

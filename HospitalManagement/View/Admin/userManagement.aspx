@@ -5,31 +5,29 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <title>User Management</title>
-    <link rel="stylesheet" type="text/css" href="adminStyless.css" />
+    <link rel="stylesheet" type="text/css" href="adminstyles2.css" />
 </head>
 <body>
     <form id="form1" runat="server">
-        <div class="container">
+        <div id="user-management-container" class="container">
             <h1>User Management</h1>
 
-            <div class="upper-half">
+            <section id="search-section" class="upper-half">
                 <h2>Search</h2>
-                <div class="search-section">
-                    <div class="editable-fields">
-                        <label for="firstNameInput">First Name:</label>
-                        <asp:TextBox ID="firstNameInput" runat="server" />
+                <div class="editable-fields">
+                    <label for="firstNameInput">First Name:</label>
+                    <asp:TextBox ID="firstNameInput" runat="server" />
 
-                        <label for="lastNameInput">Last Name:</label>
-                        <asp:TextBox ID="lastNameInput" runat="server" />
+                    <label for="lastNameInput">Last Name:</label>
+                    <asp:TextBox ID="lastNameInput" runat="server" />
 
-                        <label for="userIdInput">User ID:</label>
-                        <asp:TextBox ID="userIdInput" runat="server" />
-                    </div>
-                    <asp:Button ID="searchBtn" runat="server" Text="Search" OnClick="Search_Click" />
+                    <label for="userIdInput">User ID:</label>
+                    <asp:TextBox ID="userIdInput" runat="server" />
                 </div>
-            </div>
+                <asp:Button ID="searchBtn" runat="server" Text="Search" OnClick="Search_Click" />
+            </section>
 
-            <div class="lower-half">
+            <section id="user-details-section" class="lower-half">
                 <h2>User Details</h2>
                 <div class="readonly-fields">
                     <label>First Name:</label>
@@ -50,11 +48,10 @@
                         <asp:ListItem Text="Doctor" Value="Doctor" />
                         <asp:ListItem Text="Patient" Value="Patient" />
                     </asp:DropDownList>
-
                 </div>
-            </div>
+            </section>
 
-            <div class="button-section">
+            <div id="button-section" class="button-section">
                 <asp:Button ID="btnBack" runat="server" Text="Back" OnClick="Back_Click" />
                 <asp:Button ID="btnCancel" runat="server" Text="Cancel" OnClick="Cancel_Click" />
                 <asp:Button ID="btnSave" runat="server" Text="Save" OnClick="Save_Click" />

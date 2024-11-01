@@ -15,7 +15,7 @@ namespace HospitalManagement.Model
             _encryptionManager = new EncryptionManager(); // Instantiate EncryptionManager
         }
 
-        public bool AddAppointment(string doctorUsername, string patientFirstName, string patientLastName, string appointmentDate, string notes)
+        public bool AddAppointment(string doctorUsername, string patientFirstName, string patientLastName, string appointmentDate, string encryptedNotes)
         {
             try
             {
@@ -27,32 +27,39 @@ namespace HospitalManagement.Model
 
                 OpenConnection();
 
-                string query = @"
-                    INSERT INTO HealthManagement.dbo.Appointments (doctorID, patientID, appointmentDate, notes, status)
-                    VALUES (
-                        (SELECT d.doctorID 
-                         FROM HealthManagement.dbo.Users AS u
-                         JOIN HealthManagement.dbo.Doctors AS d ON u.userID = d.userID
-                         WHERE u.username = @DoctorUsername),
-                        (SELECT p.patientID 
-                         FROM HealthManagement.dbo.Users AS u
-                         JOIN HealthManagement.dbo.Patients AS p ON u.userID = p.userID
-                         WHERE u.username = @PatientUsername),
-                        @AppointmentDate,
-                        @Notes,
-                        'Confirmed'
-                    );";
+                // Step 1: Insert the appointment with encrypted notes
+                string insertQuery = @"
+        INSERT INTO HealthManagement.dbo.Appointments (doctorID, patientID, appointmentDate, notes, status)
+        OUTPUT INSERTED.appointmentID  -- Get the new appointment ID
+        VALUES (
+            (SELECT d.doctorID 
+             FROM HealthManagement.dbo.Users AS u
+             JOIN HealthManagement.dbo.Doctors AS d ON u.userID = d.userID
+             WHERE u.username = @DoctorUsername),
+            (SELECT p.patientID 
+             FROM HealthManagement.dbo.Users AS u
+             JOIN HealthManagement.dbo.Patients AS p ON u.userID = p.userID
+             WHERE u.username = @PatientUsername),
+            @AppointmentDate,
+            @Notes,  -- Use encrypted notes directly
+            'Confirmed'
+        );";
 
-                using (SqlCommand command = new SqlCommand(query, GetConnection()))
+                int appointmentId;
+
+                using (var command = new SqlCommand(insertQuery, GetConnection()))
                 {
                     command.Parameters.AddWithValue("@DoctorUsername", doctorUsername);
                     command.Parameters.AddWithValue("@PatientUsername", patientUsername);
                     command.Parameters.AddWithValue("@AppointmentDate", DateTime.Parse(appointmentDate));
-                    command.Parameters.AddWithValue("@Notes", notes);
+                    command.Parameters.AddWithValue("@Notes", encryptedNotes); // Insert encrypted notes
 
-                    int rowsAffected = command.ExecuteNonQuery();
-                    return rowsAffected > 0;
+                    // Retrieve the new appointment ID
+                    appointmentId = (int)command.ExecuteScalar();
                 }
+
+                // No need for further steps, as notes are already encrypted during insertion
+                return true; // Return true since the appointment was added successfully
             }
             catch (Exception ex)
             {
@@ -63,6 +70,8 @@ namespace HospitalManagement.Model
                 CloseConnection();
             }
         }
+
+
 
         private string GetPatientUsername(string firstName, string lastName)
         {
@@ -99,11 +108,12 @@ namespace HospitalManagement.Model
             {
                 OpenConnection();
 
+                // Query to get the doctorID
                 string doctorIdQuery = @"
-            SELECT d.doctorID 
-            FROM HealthManagement.dbo.Users AS u
-            JOIN HealthManagement.dbo.Doctors AS d ON u.userID = d.userID
-            WHERE u.username = @DoctorUsername";
+        SELECT d.doctorID 
+        FROM HealthManagement.dbo.Users AS u
+        JOIN HealthManagement.dbo.Doctors AS d ON u.userID = d.userID
+        WHERE u.username = @DoctorUsername";
 
                 int doctorID;
                 using (SqlCommand idCommand = new SqlCommand(doctorIdQuery, GetConnection()))
@@ -120,17 +130,19 @@ namespace HospitalManagement.Model
                     }
                 }
 
+                // Updated query to include appointmentID
                 string appointmentQuery = @"
-            SELECT 
-                a.appointmentDate, 
-                a.notes, 
-                u.firstName AS PatientFirstName, 
-                u.lastName AS PatientLastName, 
-                a.status 
-            FROM HealthManagement.dbo.Appointments AS a
-            JOIN HealthManagement.dbo.Patients AS p ON a.patientID = p.patientID
-            JOIN HealthManagement.dbo.Users AS u ON p.userID = u.userID
-            WHERE a.doctorID = @DoctorID";
+        SELECT 
+            a.appointmentID,  
+            a.appointmentDate, 
+            a.notes, 
+            u.firstName AS PatientFirstName, 
+            u.lastName AS PatientLastName, 
+            a.status 
+        FROM HealthManagement.dbo.Appointments AS a
+        JOIN HealthManagement.dbo.Patients AS p ON a.patientID = p.patientID
+        JOIN HealthManagement.dbo.Users AS u ON p.userID = u.userID
+        WHERE a.doctorID = @DoctorID";
 
                 using (SqlCommand appointmentCommand = new SqlCommand(appointmentQuery, GetConnection()))
                 {
@@ -140,21 +152,8 @@ namespace HospitalManagement.Model
                         adapter.Fill(notesTable);
                     }
                 }
-
-                // Decrypt the notes after fetching
-                var (key, iv) = _encryptionManager.RetrieveLatestKey();
-                if (key == null || iv == null)
-                {
-                    throw new Exception("No encryption key or IV found in the database.");
-                }
-
-                foreach (DataRow row in notesTable.Rows)
-                {
-                    var encryptedNotes = row["notes"].ToString();
-                    var decryptedNotes = _encryptionManager.Decrypt(encryptedNotes);
-                    row["notes"] = decryptedNotes; // Replace encrypted notes with decrypted notes
-                }
             }
+
             catch (Exception ex)
             {
                 throw new Exception("Error retrieving appointment notes: " + ex.Message);
@@ -165,6 +164,7 @@ namespace HospitalManagement.Model
             }
             return notesTable;
         }
+
 
         public void EncryptExistingNotes()
         {

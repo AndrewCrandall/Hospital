@@ -1,14 +1,14 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="viewNotes.aspx.cs" Inherits="HospitalManagement.View.Doctor.viewNotes" %>
 
 <!DOCTYPE html>
-
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <title>View Appointment Notes</title>
+    <link rel="stylesheet" type="text/css" href="../styles.css" />
 </head>
 <body>
     <form id="form1" runat="server">
-        <div>
+        <div id="content">
             <h2>Appointment Notes</h2>
 
             <asp:GridView ID="NotesGridView" runat="server" AutoGenerateColumns="False">
@@ -21,8 +21,8 @@
                 </Columns>
             </asp:GridView>
 
-            <div>
-                <asp:Button ID="BackButton" runat="server" Text="Back" OnClick="BackButton_Click" />
+            <div class="button-section" style="margin-top: 20px;">
+                <asp:Button ID="BackButton" runat="server" Text="Back" OnClick="BackButton_Click" CssClass="button-back" />
             </div>
         </div>
     </form>

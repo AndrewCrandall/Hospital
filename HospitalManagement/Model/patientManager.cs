@@ -55,22 +55,22 @@ namespace HospitalManagement.Model
 
                 // Step 3: Get appointment records using patientID
                 string recordsQuery = @"
-                    SELECT 
-                        u.username, 
-                        u.firstName, 
-                        u.lastName, 
-                        u.email, 
-                        a.appointmentID, 
-                        a.appointmentDate, 
-                        a.notes,
-                        du.firstName AS DoctorFirstName, 
-                        du.lastName AS DoctorLastName
-                    FROM HealthManagement.dbo.Appointments AS a
-                    JOIN HealthManagement.dbo.Patients AS p ON a.patientID = p.patientID
-                    JOIN HealthManagement.dbo.Users AS u ON p.userID = u.userID
-                    JOIN HealthManagement.dbo.Doctors AS d ON a.doctorID = d.doctorID
-                    JOIN HealthManagement.dbo.Users AS du ON d.userID = du.userID
-                    WHERE p.patientID = @PatientID";
+            SELECT 
+                u.username, 
+                u.firstName, 
+                u.lastName, 
+                u.email, 
+                a.appointmentID, 
+                a.appointmentDate, 
+                a.notes,
+                du.firstName AS DoctorFirstName, 
+                du.lastName AS DoctorLastName
+            FROM HealthManagement.dbo.Appointments AS a
+            JOIN HealthManagement.dbo.Patients AS p ON a.patientID = p.patientID
+            JOIN HealthManagement.dbo.Users AS u ON p.userID = u.userID
+            JOIN HealthManagement.dbo.Doctors AS d ON a.doctorID = d.doctorID
+            JOIN HealthManagement.dbo.Users AS du ON d.userID = du.userID
+            WHERE p.patientID = @PatientID";
 
                 using (SqlCommand recordsCommand = new SqlCommand(recordsQuery, GetConnection()))
                 {
@@ -103,6 +103,8 @@ namespace HospitalManagement.Model
 
             return recordsTable;
         }
+
+
 
         public bool UpdateUserProfile(int userID, string username, string password, string firstName, string lastName, string email)
         {

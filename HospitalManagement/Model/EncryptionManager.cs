@@ -10,29 +10,27 @@ namespace HospitalManagement.Model
     {
         public EncryptionManager() : base()
         {
-            InitializeKeys(); // Initialize keys on instantiation
+            InitializeKeys();
         }
 
         private void InitializeKeys()
         {
-            var (key, iv) = RetrieveLatestKeyData(); // Unpack the tuple
-                                                     // Only generate new keys if both key and IV are null
+            var (key, iv) = RetrieveLatestKeyData();
             if (key == null || iv == null)
             {
                 GenerateAndStoreNewKey();
             }
         }
 
-
         private void GenerateAndStoreNewKey()
         {
-            byte[] newKey = GenerateKey(); // Generate a new encryption key
-            byte[] iv = new byte[16]; // 128 bits for AES
+            byte[] newKey = GenerateKey();
+            byte[] iv = new byte[16];
             using (var rng = new RNGCryptoServiceProvider())
             {
-                rng.GetBytes(iv); // Generate a new IV
+                rng.GetBytes(iv);
             }
-            StoreKey(newKey, iv); // Store the new key and IV
+            StoreKey(newKey, iv);
         }
 
         public byte[] GenerateKey()
@@ -41,7 +39,7 @@ namespace HospitalManagement.Model
             {
                 byte[] key = new byte[32]; // 256 bits
                 rng.GetBytes(key);
-                return key; // Return the generated key
+                return key;
             }
         }
 
@@ -54,7 +52,7 @@ namespace HospitalManagement.Model
             {
                 command.Parameters.AddWithValue("@key", key);
                 command.Parameters.AddWithValue("@iv", iv);
-                command.Parameters.AddWithValue("@createdAt", DateTime.UtcNow); // Store creation time
+                command.Parameters.AddWithValue("@createdAt", DateTime.UtcNow);
                 command.ExecuteNonQuery();
             }
             CloseConnection();
@@ -62,10 +60,15 @@ namespace HospitalManagement.Model
 
         public string Encrypt(string plainText, byte[] key, byte[] iv)
         {
+            if (key == null || key.Length != 32)
+                throw new ArgumentException("Invalid key size.");
+            if (iv == null || iv.Length != 16)
+                throw new ArgumentException("Invalid IV size.");
+
             using (var aes = Aes.Create())
             {
                 aes.Key = key;
-                aes.IV = iv; // Set the IV provided
+                aes.IV = iv;
 
                 using (var msEncrypt = new MemoryStream())
                 {
@@ -75,7 +78,9 @@ namespace HospitalManagement.Model
                     using (var csEncrypt = new CryptoStream(msEncrypt, aes.CreateEncryptor(), CryptoStreamMode.Write))
                     using (var swEncrypt = new StreamWriter(csEncrypt))
                     {
-                        swEncrypt.Write(plainText); // Write the plaintext to be encrypted
+                        swEncrypt.Write(plainText);
+                        swEncrypt.Flush(); // Flush the StreamWriter
+                        csEncrypt.FlushFinalBlock(); // Finalize the encryption
                     }
 
                     // Return the full cipher text as a Base64 string
@@ -84,33 +89,34 @@ namespace HospitalManagement.Model
             }
         }
 
-
         public string Decrypt(string cipherText)
         {
+            // Log the incoming cipher text
+            Console.WriteLine($"Decrypting cipher text: {cipherText}");
+
             var fullCipher = Convert.FromBase64String(cipherText);
+
+            // Check for minimum length
+            if (fullCipher.Length < 16) // 16 bytes for IV
+                throw new Exception("Cipher text is too short.");
+
+            var iv = new byte[16];
+            Array.Copy(fullCipher, iv, iv.Length);
+
+            var cipher = new byte[fullCipher.Length - iv.Length];
+            Array.Copy(fullCipher, iv.Length, cipher, 0, cipher.Length);
+
+            var (key, retrievedIv) = RetrieveLatestKey();
+            if (key == null || retrievedIv == null)
+            {
+                throw new Exception("No encryption key or IV found for decryption.");
+            }
+
             using (var aes = Aes.Create())
             {
-                if (fullCipher.Length < 16) // Check for minimum length
-                    throw new Exception("Cipher text is too short.");
-
-                // The first 16 bytes are the IV
-                var iv = new byte[16];
-                Array.Copy(fullCipher, iv, iv.Length);
+                aes.Key = key;
                 aes.IV = iv;
 
-                // The remaining bytes are the actual cipher text
-                var cipher = new byte[fullCipher.Length - iv.Length];
-                Array.Copy(fullCipher, iv.Length, cipher, 0, cipher.Length);
-
-                // Retrieve the latest key
-                var (key, retrievedIv) = RetrieveLatestKey();
-                if (key == null || retrievedIv == null)
-                {
-                    throw new Exception("No encryption key or IV found for decryption.");
-                }
-                aes.Key = key;
-
-                // Decrypt the data
                 using (var msDecrypt = new MemoryStream(cipher))
                 using (var csDecrypt = new CryptoStream(msDecrypt, aes.CreateDecryptor(), CryptoStreamMode.Read))
                 using (var srDecrypt = new StreamReader(csDecrypt))
@@ -119,9 +125,6 @@ namespace HospitalManagement.Model
                 }
             }
         }
-
-
-
 
 
         public (byte[] Key, byte[] IV) RetrieveLatestKey()
@@ -138,12 +141,12 @@ namespace HospitalManagement.Model
                         var key = reader["EncryptionKey"] as byte[];
                         var iv = reader["IV"] as byte[];
                         CloseConnection();
-                        return (key, iv); // Return the latest key and IV
+                        return (key, iv);
                     }
                 }
             }
             CloseConnection();
-            return (null, null); // Return null if no keys found
+            return (null, null);
         }
 
         private (byte[] Key, byte[] IV) RetrieveLatestKeyData()
@@ -160,17 +163,17 @@ namespace HospitalManagement.Model
                         var key = reader["EncryptionKey"] as byte[];
                         var iv = reader["IV"] as byte[];
                         CloseConnection();
-                        return (key, iv); // Return the latest key and IV
+                        return (key, iv);
                     }
                 }
             }
             CloseConnection();
-            return default; // Return null if no keys found
+            return default;
         }
 
         public void RotateEncryptionKey()
         {
-            GenerateAndStoreNewKey(); // Generate and store a new key and IV
+            GenerateAndStoreNewKey();
         }
     }
 }

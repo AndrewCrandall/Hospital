@@ -51,12 +51,6 @@ namespace HospitalManagement.View.Admin
                 // Create an instance of EncryptionManager to decrypt the notes
                 EncryptionManager encryptionManager = new EncryptionManager();
 
-                // Decrypt notes for each appointment
-                foreach (var appointment in appointments)
-                {
-                    appointment.Notes = encryptionManager.Decrypt(appointment.Notes); // Decrypt the notes
-                }
-
                 if (appointments != null && appointments.Count > 0) // Check if appointments is not null and has items
                 {
                     AppointmentGridView.DataSource = appointments;

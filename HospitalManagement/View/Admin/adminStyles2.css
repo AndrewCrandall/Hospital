@@ -1,0 +1,102 @@
+﻿/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+
+h1, h2 {
+    color: #333;
+}
+
+/* User Management Container */
+#user-management-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Upper Half Section */
+.upper-half, .lower-half {
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Search Section */
+#search-section {
+    margin-bottom: 20px;
+}
+
+.editable-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px; /* Space between fields */
+}
+
+label {
+    font-weight: bold;
+}
+
+/* User Details Section */
+#user-details-section {
+    margin-top: 20px;
+}
+
+.readonly-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px; /* Space between fields */
+}
+
+/* Text Boxes */
+.text-box {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Button Section */
+.button-section {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+asp\:Button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+    asp\:Button:hover {
+        background-color: #0056b3;
+    }
+
+/* Specific Styles for Back Button */
+#btnBack {
+    background-color: #e74c3c;
+}
+
+    #btnBack:hover {
+        background-color: #c0392b;
+    }
+
+/* Specific Styles for ReadOnly TextBoxes */
+[readonly] {
+    background-color: #e9ecef;
+    color: #495057;
+    border: 1px solid #ced4da; /* Ensure readonly fields have a border */
+}

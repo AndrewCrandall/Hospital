@@ -202,9 +202,9 @@
     <Content Include="obj\Debug\HospitalManagement.dll" />
     <Content Include="obj\Debug\HospitalManagement.pdb" />
     <Content Include="View\Admin\adminDashboard.aspx" />
+    <Content Include="View\Admin\adminStyles2.css" />
     <Content Include="View\Admin\analytics.aspx" />
     <Content Include="View\Admin\dataManagement.aspx" />
-    <Content Include="View\Admin\adminStyles.css" />
     <Content Include="View\Admin\userManagement.aspx" />
     <Content Include="View\Doctor\addNotes.aspx" />
     <Content Include="View\Doctor\doctorDashboard.aspx" />

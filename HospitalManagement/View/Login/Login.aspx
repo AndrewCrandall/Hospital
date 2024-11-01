@@ -4,24 +4,25 @@
 <html lang="en">
 <head runat="server">
     <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="../styles.css" />
 </head>
 <body>
     <form id="form1" runat="server">
-        <div>
+        <div id="content">
             <fieldset>
                 <legend>Login</legend>
-                <div>
+                <div class="form-group">
                     <label for="usernameTxt">Username:</label>
-                    <asp:TextBox ID="usernameTxt" runat="server" CssClass="form-control" />
+                    <asp:TextBox ID="usernameTxt" runat="server" CssClass="text-box" />
                 </div>
-                <div>
+                <div class="form-group">
                     <label for="passwordTxt">Password:</label>
-                    <asp:TextBox ID="passwordTxt" runat="server" TextMode="Password" CssClass="form-control" />
+                    <asp:TextBox ID="passwordTxt" runat="server" TextMode="Password" CssClass="text-box" />
                 </div>
-                <div>
-                    <asp:Button ID="cancelBtn" runat="server" Text="Cancel" CssClass="btn" />
-                    <asp:Button ID="loginBtn" runat="server" Text="Login" CssClass="btn" OnClick="loginBtn_Click" />
-                    <asp:Button ID="registerBtn" runat="server" Text="Register" CssClass="btn" OnClick="RegisterBtn_Click" />
+                <div class="button-section">
+                    <asp:Button ID="cancelBtn" runat="server" Text="Cancel" CssClass="action-button" />
+                    <asp:Button ID="loginBtn" runat="server" Text="Login" CssClass="action-button" OnClick="loginBtn_Click" />
+                    <asp:Button ID="registerBtn" runat="server" Text="Register" CssClass="action-button" OnClick="RegisterBtn_Click" />
                 </div>
             </fieldset>
         </div>

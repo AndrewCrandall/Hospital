@@ -41,8 +41,19 @@ namespace HospitalManagement.View.Doctor
                     foreach (DataRow row in appointmentNotes.Rows)
                     {
                         string encryptedNote = row["notes"].ToString(); // Assuming "notes" is the column name
-                        string decryptedNote = encryptionManager.Decrypt(encryptedNote);
-                        row["notes"] = decryptedNote; // Replace the encrypted note with the decrypted note
+
+                        // Decrypt the note and handle potential errors
+                        try
+                        {
+                            string decryptedNote = encryptionManager.Decrypt(encryptedNote);
+                            row["notes"] = decryptedNote; // Replace the encrypted note with the decrypted note
+                        }
+                        catch (Exception decryptionEx)
+                        {
+                            // Log the error (you might want to log it to a file or monitoring system)
+                            Console.WriteLine($"Decryption error for appointment ID {row["appointmentID"]}: {decryptionEx.Message}");
+                            row["notes"] = "Error decrypting notes."; // Indicate there was an issue
+                        }
                     }
 
                     // Bind the decrypted data to the GridView
@@ -60,7 +71,6 @@ namespace HospitalManagement.View.Doctor
                 ClientScript.RegisterStartupScript(this.GetType(), "Error", $"alert('An error occurred: {ex.Message}');", true);
             }
         }
-
         protected void BackButton_Click(object sender, EventArgs e)
         {
             // Redirect user back to the dashboard

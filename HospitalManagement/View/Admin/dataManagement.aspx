@@ -4,6 +4,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <title>Appointment Management</title>
+    <link rel="stylesheet" type="text/css" href="../styles.css" />
+
 </head>
 <body>
     <form id="form1" runat="server">
@@ -30,7 +32,6 @@
                             <asp:BoundField DataField="VisitDate" HeaderText="Appointment Date" />
                             <asp:BoundField DataField="Notes" HeaderText="Notes" />
                         </Columns>
-
                     </asp:GridView>
                 </div>
             </div>
