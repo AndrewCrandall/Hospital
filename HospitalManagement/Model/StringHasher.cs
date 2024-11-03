@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Author : Andrew Crandall
+// Date Modified : 11/3/2024
+// Title : StringHasher
+// Purpose : Provide the logic for backend password hashing and validation
+
+using System;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -17,7 +22,6 @@ public static class StringHasher
             return builder.ToString();
         }
     }
-
     public static bool VerifyString(string input, string storedHashedValue)
     {
         string hashedInput = HashString(input);

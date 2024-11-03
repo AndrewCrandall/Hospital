@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Author : Andrew Crandall
+// Date Modified : 11/3/2024
+// Title : DatabaseConnectionManager
+// Purpose : Establish connection to database
+
+using System;
 using System.Data.SqlClient;
 
 public class SqlConnectionManager

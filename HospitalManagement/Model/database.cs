@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Author : Andrew Crandall
+// Date Modified : 11/3/2024
+// Title : database
+// Purpose : Provide the connection string for the database
 using System.Data.SqlClient;
 
 namespace HospitalManagement.DataAccess

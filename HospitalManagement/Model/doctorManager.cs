@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Author : Andrew Crandall
+// Date Modified : 11/3/2024
+// Title : doctorManager
+// Purpose : Provide the logic for backend management of all doctor actions
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;

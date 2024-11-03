@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Author : Andrew Crandall
+// Date Modified : 11/3/2024
+// Title : InputValidator
+// Purpose : Provide the logic for checking all text box fields
+
+using System;
 using System.Text.RegularExpressions;
 using System.Web;
 

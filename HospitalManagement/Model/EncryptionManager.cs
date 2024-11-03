@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Author : Andrew Crandall
+// Date Modified : 11/3/2024
+// Title : encryptionManager
+// Purpose : Provide the logic data encryption, generating new keys and IV's.
+
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;

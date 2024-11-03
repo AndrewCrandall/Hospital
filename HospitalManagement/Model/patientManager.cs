@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Author : Andrew Crandall
+// Date Modified : 11/3/2024
+// Title : patientManager
+// Purpose : Provide the logic for backend management of all patient actions
+
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using static LoginManager;
@@ -10,7 +15,6 @@ namespace HospitalManagement.Model
         public patientManager() : base() // Calls the base constructor
         {
         }
-
         public DataTable GetPatientRecordsByUsername(string username)
         {
             DataTable recordsTable = new DataTable();
@@ -103,9 +107,6 @@ namespace HospitalManagement.Model
 
             return recordsTable;
         }
-
-
-
         public bool UpdateUserProfile(int userID, string username, string password, string firstName, string lastName, string email)
         {
             try
@@ -147,7 +148,6 @@ namespace HospitalManagement.Model
                 CloseConnection();
             }
         }
-
         public int GetUserIdByUsername(string username)
         {
             int userID = 0;
